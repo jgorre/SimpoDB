@@ -28,9 +28,15 @@ def test_simple_tokens():
 
 def test_reserved_keywords():
     for keyword in reserved_keywords:
-        lexer.input(keyword)
+        upper_keyword = keyword.upper()
+        lexer.input(upper_keyword)
         token = get_single_token(lexer)
-        assert_token_type_value(token, token.type, token.value)
+        assert_token_type_value(token, keyword, token.value)
+
+        lower_keyword = keyword.lower()
+        lexer.input(lower_keyword)
+        token = get_single_token(lexer)
+        assert_token_type_value(token, keyword, token.value)
 
 
 def test_select_star_statement():
