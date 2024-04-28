@@ -1,0 +1,7 @@
+This should be a valid string. Should differentiate between strings and identifiers.
+
+sql_command > insert into persons (lastname, age, firstname) values (gorrell, 29a, jordan)
+Syntax error at 'a'
+Unknown command: None
+
+======
