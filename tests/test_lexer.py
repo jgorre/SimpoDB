@@ -1,16 +1,36 @@
-# from sql_engine.sql_parser.tokens import lexer
-# import sys
-# sys.path.insert(0, '/home/jordan.gorrell/practiceRepos/parser')
-# print(sys.path)
-
-from sql_engine.sql_parser.tokens import lexer, tokens
+from sql_engine.sql_parser.tokens import lexer, reserved_keywords
+from ply.lex import LexError
 
 def assert_token_type_value(token, expected_token_type, expected_value):
     assert token.type == expected_token_type and token.value == expected_value
 
 
-def test_tokens():
-    pass
+def get_single_token(lexer):
+    single_token_list = list(lexer)
+    assert len(single_token_list) == 1
+    return single_token_list[0]
+
+
+## Tests ##
+
+def test_simple_tokens():
+    token_map = {
+        'STAR': '*',
+        'COMMA': ',',
+        'LPAREN': '(',
+        'RPAREN': ')'
+    }
+
+    for token_type, token_value in token_map.items():
+        lexer.input(token_value)
+        token = get_single_token(lexer)
+        assert token.type == token_type
+
+def test_reserved_keywords():
+    for keyword in reserved_keywords:
+        lexer.input(keyword)
+        token = get_single_token(lexer)
+        assert_token_type_value(token, token.type, token.value)
 
 
 def test_select_star_statement():
@@ -38,4 +58,39 @@ def test_select_columns_statement():
     assert_token_type_value(col3_token, 'IDENTIFIER', 'col3')
 
 
-# def test_
+def test_unexpected_character():
+    try:
+        lexer.input("'asdf")
+        get_single_token(lexer)
+    except LexError:
+        assert True
+
+
+def test_string_and_identifier():
+    input_str = "id 'string' anotherid 'another string'"
+    lexer.input(input_str)
+    tokens = list(lexer)
+
+    first_identifier_token = tokens[0]
+    first_string_token = tokens[1]
+    second_identifier_token = tokens[2]
+    second_string_token = tokens[3]
+
+    assert first_identifier_token.type == 'IDENTIFIER'
+    assert first_string_token.type == 'STRING'
+    assert second_identifier_token.type == 'IDENTIFIER'
+    assert second_string_token.type == 'STRING'
+
+
+def test_number_and_string_and_identifier():
+    input_str = "asdf 123 'adsf'"
+    lexer.input(input_str)
+    tokens = list(lexer)
+
+    identifier_token = tokens[0]
+    number_token = tokens[1]
+    string_token = tokens[2]
+
+    assert identifier_token.type == 'IDENTIFIER'
+    assert number_token.type == 'NUMBER'
+    assert string_token.type == 'STRING'
