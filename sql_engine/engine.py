@@ -1,4 +1,3 @@
-import os
 from pathlib import Path
 import json
 
@@ -98,13 +97,22 @@ def handle_insert(insert_command: InsertCommand):
             joined_line = ','.join(line)
             f.write(f'{joined_line}\n')
 
+
+def handle_select(query: SelectCommand):
+    table = query.table
+    table_path = DATA_FOLDER_PATH / table
+
+    data_file_path = table_path / 'data'
+    with open(data_file_path, "r") as f:
+        for line in f:
+            print(line)
+
+
 def handle_sql_command(sql):
     if isinstance(sql, SelectCommand):
-        # handle_select(sql)
-        print('select')
+        handle_select(sql)
     elif isinstance(sql, CreateTableCommand):
         handle_create_table(sql)
-        # print('create_table')
     elif isinstance(sql, InsertCommand):
         handle_insert(sql)
     else:

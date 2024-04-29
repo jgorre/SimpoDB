@@ -1,7 +1,7 @@
-This should be a valid string. Should differentiate between strings and identifiers.
+Structure command handling somehow
 
-sql_command > insert into persons (lastname, age, firstname) values (gorrell, 29a, jordan)
-Syntax error at 'a'
-Unknown command: None
-
-======
+Decide if we're going hardcore and doing some custom binary encoding/decoding thing on the files
+    - Start with csv
+    - Then switch out later
+    - Use the starting with csv as a way to make it clear where writing/encoding/reading/decoding 
+        code should be separated from other code. Should help with structure.
