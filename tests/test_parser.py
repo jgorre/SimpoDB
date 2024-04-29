@@ -19,7 +19,7 @@ def test_select_columns():
 def test_create_table():
     sql = 'create table mytable (col1 string, col2 int)'
     create_table_command = parser.parse(sql)
-    schema = create_table_command.schema()
+    schema = create_table_command._schema()
     
     assert schema['table_name'] == 'mytable'
     assert schema['columns'] == [

@@ -3,56 +3,11 @@ import json
 
 from .sql_parser.parse import parser
 from .sql_types.sql_type_mapping import sql_type_mapping
-from .commands.select_command import SelectCommand
-from .commands.insert_command import InsertCommand
-from .commands.create_table_command import CreateTableCommand
-
-DATA_FOLDER_PATH = Path("./data")
-
-def read_schema(folder_path: Path):
-    schema_file_path = folder_path / "schema.json"
-    with open(schema_file_path, "r") as schema_file:
-        schema = json.load(schema_file)
-    return schema
-
-# create table persons (firstname string, lastname string, age int)
-def handle_create_table(create_table_command: CreateTableCommand):
-    table_name = create_table_command.table_name
-    new_folder_path = DATA_FOLDER_PATH / table_name
-
-    if new_folder_path.exists():
-        print(f"Table '{table_name}' already exists.")
-        return
-
-    new_folder_path.mkdir(parents=True, exist_ok=False)
-
-    # Create schema.json file in the new folder
-    schema_file_path = new_folder_path / "schema.json"
-    with open(schema_file_path, "w") as schema_file:
-        schema = create_table_command.schema()
-        json.dump(schema, schema_file, indent=4)  # You can provide your desired JSON content here
+from .commands.sql_command import SqlCommand
 
 
-def handle_select(query: SelectCommand):
-    table = query.table
-    table_path = DATA_FOLDER_PATH / table
-
-    data_file_path = table_path / 'data'
-    with open(data_file_path, "r") as f:
-        for line in f:
-            print(line)
-
-
-def handle_sql_command(sql):
-    if isinstance(sql, SelectCommand):
-        handle_select(sql)
-    elif isinstance(sql, CreateTableCommand):
-        handle_create_table(sql)
-    elif isinstance(sql, InsertCommand):
-        sql.execute()
-        # handle_insert(sql)
-    else:
-        print(f"Unknown command: {sql}")
+def handle_sql_command(sql: SqlCommand):
+    sql.execute()
 
 def run():
     while True:

@@ -1,10 +1,11 @@
 from pathlib import Path
 import json
 
+from .sql_command import SqlCommand
 from ..constants import DATA_PATH
 from ..sql_types.sql_type_mapping import sql_type_mapping
 
-class InsertCommand:
+class InsertCommand(SqlCommand):
     def __init__(self, table, columns, values):
         self.type = 'INSERT'
         self.table = table
