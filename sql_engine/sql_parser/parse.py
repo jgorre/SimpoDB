@@ -1,7 +1,11 @@
 import ply.yacc as yacc
 
+from ..commands.select_command import SelectCommand
+from ..commands.insert_command import InsertCommand
+from ..commands.create_table_command import CreateTableCommand
+
+
 from .tokens import tokens
-from .sql_commands import SelectCommand, CreateTableCommand, InsertCommand
 
 def p_sql_statement(p):
     '''sql_statement : query 
