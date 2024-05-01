@@ -1,11 +1,17 @@
 from pathlib import Path
 
+from ..constants import DATA_PATH
+
 class ByteReader:
     def __init__(self):
         self.bytes = b''
 
-    def get_values(self, path):
-        bytestr = self._read_bytes(path)
+
+    def get_values(self, table: str, meets_condition=lambda v: True):
+        table_path = DATA_PATH / table
+        table_data_path = table_path / 'data'
+        
+        bytestr = self._read_bytes(table_data_path)
 
         if bytestr is None:
             return []
@@ -33,7 +39,9 @@ class ByteReader:
                 item_values.append(integer)
                 val_type_index = int_end_index
             elif val_type == 0:
-                all_values.append(item_values.copy())
+                if meets_condition(item_values):
+                    all_values.append(item_values.copy())
+                
                 item_values.clear()
                 val_type_index += 1
                 if len(bytestr) <= val_type_index:

@@ -1,6 +1,5 @@
 from .sql_command import SqlCommand
-from ..constants import DATA_PATH
-from ..encoding.reader import ByteReader
+from ..data_serialization.reader import ByteReader
 
 class SelectCommand(SqlCommand):
     def __init__(self, columns, table):
@@ -10,6 +9,7 @@ class SelectCommand(SqlCommand):
 
     def execute(self):
         reader = ByteReader()
-        table_data_path = DATA_PATH / self.table / 'data'
-        values = reader.get_values(table_data_path)
+        # where_condition = lambda row: row[1] == 'jakobsson'
+        # values = reader.get_values(self.table, where_condition)
+        values = reader.get_values(self.table)
         print(values)

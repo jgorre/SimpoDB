@@ -1,10 +1,12 @@
 from pathlib import Path
 
+from ..constants import DATA_PATH
+
 class Writer:
     def __init__(self):
         self._byte_writer = ByteWriter()
 
-    def write(self, values: list[list[object]], path: Path):
+    def write(self, values: list[list[object]], table: str):
         encoded_values = b''
         for value_list in values:
             for value in value_list:
@@ -19,7 +21,8 @@ class Writer:
             encoded_values += value_bytes
             self._byte_writer.reset_bytes()
 
-        with open(path, 'ab') as file:
+        data_path = DATA_PATH / table / 'data'
+        with open(data_path, 'ab') as file:
             file.write(encoded_values)
 
 

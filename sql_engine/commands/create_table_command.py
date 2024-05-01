@@ -1,7 +1,6 @@
-import json
-
 from .sql_command import SqlCommand
 from ..constants import DATA_PATH
+from ..data_serialization.schema import create_schema
 
 class CreateTableCommand(SqlCommand):
     def __init__(self, table_name, columns):
@@ -11,17 +10,7 @@ class CreateTableCommand(SqlCommand):
 
 
     def execute(self):
-        new_folder_path = DATA_PATH / self.table_name
-
-        if new_folder_path.exists():
-            print(f"Table '{self.table_name}' already exists.")
-            return
-
-        new_folder_path.mkdir(parents=True, exist_ok=False)
-
-        schema_file_path = new_folder_path / "schema.json"
-        with open(schema_file_path, "w") as schema_file:
-            json.dump(self._schema(), schema_file, indent=4)
+        create_schema(self.table_name, self._schema())
 
 
     def _schema(self):

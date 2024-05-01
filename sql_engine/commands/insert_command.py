@@ -1,10 +1,7 @@
-from pathlib import Path
-import json
-
 from .sql_command import SqlCommand
-from ..constants import DATA_PATH
 from ..sql_types.sql_type_mapping import sql_type_mapping
-from ..encoding.writer import Writer
+from ..data_serialization.writer import Writer
+from ..data_serialization.schema import get_schema
 
 class InsertCommand(SqlCommand):
     def __init__(self, table, columns, values):
@@ -15,13 +12,12 @@ class InsertCommand(SqlCommand):
 
 
     def execute(self):
-        folder_path = DATA_PATH / self.table
+        schema = get_schema(self.table)
 
-        if not folder_path.exists():
+        if schema is None:
             print(f"Table '{self.table}' does not exist")
             return
         
-        schema = self._read_schema(folder_path)
         column_names = [c['name'] for c in schema['columns']]
         for column in self.columns:
             if column not in column_names:
@@ -66,12 +62,5 @@ class InsertCommand(SqlCommand):
                 
             insert_values.append(sorted_values_list)
 
-        data_file_path = folder_path / "data"
         writer = Writer()
-        writer.write(insert_values, data_file_path)
-
-    def _read_schema(self, folder_path: Path):
-        schema_file_path = folder_path / "schema.json"
-        with open(schema_file_path, "r") as schema_file:
-            schema = json.load(schema_file)
-        return schema
+        writer.write(insert_values, self.table)
