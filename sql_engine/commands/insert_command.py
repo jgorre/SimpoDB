@@ -4,6 +4,7 @@ import json
 from .sql_command import SqlCommand
 from ..constants import DATA_PATH
 from ..sql_types.sql_type_mapping import sql_type_mapping
+from ..encoding.writer import Writer
 
 class InsertCommand(SqlCommand):
     def __init__(self, table, columns, values):
@@ -52,24 +53,22 @@ class InsertCommand(SqlCommand):
                     return
 
                 try:
-                    if column_type == 'STRING' and (not value.startswith("'") or not value.endswith("'")):
-                        raise ValueError()
-                    else:
-                        python_type(value)
+                    if column_type == 'STRING':
+                        if not value.startswith("'") or not value.endswith("'"):
+                            raise ValueError(f"{value} is not a valid string")
+                        value = value[1:-1]
+                    
+                    sorted_values_list[index] = python_type(value)
                 except ValueError:
                     print(f"Value {value} does not match type '{column_type}'.")
                     return
 
-                sorted_values_list[index] = value
                 
             insert_values.append(sorted_values_list)
 
         data_file_path = folder_path / "data"
-        with open(data_file_path, "a") as f:
-            for line in insert_values:
-                joined_line = ','.join(line)
-                f.write(f'{joined_line}\n')
-
+        writer = Writer()
+        writer.write(insert_values, data_file_path)
 
     def _read_schema(self, folder_path: Path):
         schema_file_path = folder_path / "schema.json"
