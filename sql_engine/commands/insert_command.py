@@ -1,7 +1,7 @@
 from .sql_command import SqlCommand
 from ..sql_types.sql_type_mapping import sql_type_mapping
 from ..data_serialization.writer import Writer
-from ..data_serialization.schema import get_schema
+from ..data_serialization.schema import get_latest_schema
 
 class InsertCommand(SqlCommand):
     def __init__(self, table, columns, values):
@@ -12,7 +12,7 @@ class InsertCommand(SqlCommand):
 
 
     def execute(self):
-        schema = get_schema(self.table)
+        schema = get_latest_schema(self.table)
 
         if schema is None:
             print(f"Table '{self.table}' does not exist")
@@ -62,5 +62,5 @@ class InsertCommand(SqlCommand):
                 
             insert_values.append(sorted_values_list)
 
-        writer = Writer()
-        writer.write(insert_values, self.table)
+        writer = Writer(self.table)
+        writer.write(insert_values)

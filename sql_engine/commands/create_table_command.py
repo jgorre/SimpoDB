@@ -14,10 +14,12 @@ class CreateTableCommand(SqlCommand):
 
 
     def _schema(self):
-        return {
-            "table_name": self.table_name,
-            "columns": [{
-                "name": column_name,
-                "type": column_type.upper()
-            } for column_name, column_type in self.columns]
-        }
+        return [
+            {
+                "version": 0,
+                "columns": [{
+                    "name": column_name,
+                    "type": column_type.upper()
+                } for column_name, column_type in self.columns]
+            }
+        ]

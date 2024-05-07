@@ -1,7 +1,0 @@
-Structure command handling somehow
-
-Decide if we're going hardcore and doing some custom binary encoding/decoding thing on the files
-    - Start with csv
-    - Then switch out later
-    - Use the starting with csv as a way to make it clear where writing/encoding/reading/decoding 
-        code should be separated from other code. Should help with structure.
