@@ -14,3 +14,14 @@ def test_encode_bytes():
 
     encoded_bytes = writer.build()
     assert encoded_bytes == b'\x01\xc6O\x08mystring\n'
+
+def test_encode_long_string():
+    schema_version = 1
+    writer = ByteWriter(schema_version)
+
+    long_str = 'a' * 256
+
+    writer.add_string(long_str)
+
+    encoded_bytes = writer.build()
+    assert encoded_bytes == (b'\x01\x80\x02' + long_str.encode())

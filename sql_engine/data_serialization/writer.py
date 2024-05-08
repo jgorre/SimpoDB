@@ -57,12 +57,18 @@ class ByteWriter:
         encoded_string = string.encode('utf-8')
         num_bytes = len(encoded_string)
 
-        if num_bytes > 255:
-            raise ValueError('UTF-8 string greater than 255 bytes is not supported.')
-        
-        num_bytes_as_bytes = num_bytes.to_bytes()
+        bytes_list = []
+        while True:
+            byte = num_bytes & 0x7F
+            num_bytes >>= 7
+            if num_bytes != 0:
+                byte |= 0x80
 
-        self.bytes += num_bytes_as_bytes
+            bytes_list.append(byte)
+            if num_bytes == 0:
+                break
+
+        self.bytes += bytes(bytes_list)
         self.bytes += encoded_string
 
     def add_integer(self, integer: int):
