@@ -72,44 +72,28 @@ class ByteWriter:
         self.bytes += encoded_string
 
     def add_integer(self, integer: int):
-        encoded_bytes = self._encode_integer(integer)
-        self.bytes += bytes(encoded_bytes)
+        is_negative = integer < 0
 
-    def _encode_integer(self, integer: int):
-        sign_bit = 0
+        first_byte = (integer & 0b00111111)
+        first_byte <<= 1
+        if is_negative:
+            first_byte |= 0b00000001
 
-        if integer < 0:
-            sign_bit = 1
-            integer = -integer
+        integer >>= 6
 
-        bits_remaining = integer.bit_length()
-        first_bits = integer & 0b111111
-        first_bits = first_bits << 1
-        first_bits = first_bits | sign_bit
-        
-        bits_remaining -= 6
+        if integer != 0:
+            first_byte |= 0b10000000
 
-        if bits_remaining > 0:
-            first_bits = first_bits | 128
+        bytes_list = [first_byte]
+        while integer > 0:
+            byte = integer & 0x7F
+            integer >>= 7
+            if integer != 0:
+                byte |= 0x80
 
-        encoded_bytes = []
-        encoded_bytes.append(first_bits)
+            bytes_list.append(byte)
 
-        bit_offset = 6
-        while bits_remaining > 0:
-            bits = integer >> bit_offset
-            bits = bits & 0b1111111
-
-            bits_remaining -= 7
-
-            if bits_remaining > 0:
-                bits = bits | 128
-                bit_offset += 7
-
-            encoded_bytes.append(bits)
-
-        return bytes(encoded_bytes)
-
+        self.bytes += bytes(bytes_list)
 
     def build(self):
         return self.bytes
