@@ -11,7 +11,9 @@ reserved_keywords = [
    'STRING',
    'VALUES',
    'INSERT',
-   'INTO'
+   'INTO',
+   'PRIMARY',
+   'KEY'
 ]
 
 # List of token names including reserved words

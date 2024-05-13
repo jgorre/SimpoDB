@@ -17,18 +17,20 @@ def test_select_columns():
 
 
 def test_create_table():
-    sql = 'create table mytable (col1 string, col2 int)'
+    sql = 'create table mytable (col1 string primary key, col2 int)'
     create_table_command = parser.parse(sql)
     schema = create_table_command._schema()[0]
     
     assert schema['columns'] == [
         {
             'name': 'col1', 
-            'type': 'STRING'
+            'type': 'STRING',
+            'attributes': ['PRIMARY KEY']
         },
         {
             'name': 'col2', 
-            'type': 'INT'
+            'type': 'INT',
+            'attributes': []
         }
     ]
 

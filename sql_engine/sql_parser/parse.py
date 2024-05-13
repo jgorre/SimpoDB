@@ -43,16 +43,35 @@ def p_create_table(p):
     'create_table : CREATE TABLE IDENTIFIER LPAREN create_table_columns RPAREN'
     table_name = p[3]
     columns = p[5]
-    p[0] = CreateTableCommand(table_name, columns)
+    
+    primary_key = None
+    for column in columns:
+        if 'PRIMARY KEY' in column[2]:
+            primary_key = column[0]
+            break
+
+    if primary_key is None:
+        raise ValueError("Cannot create a table without a primary key.")
+    
+    p[0] = CreateTableCommand(table_name, columns, primary_key)
 
 def p_create_table_columns(p):
-    '''create_table_columns : IDENTIFIER column_type COMMA create_table_columns
-                            | IDENTIFIER column_type
+    '''create_table_columns : table_column_definition COMMA create_table_columns
+                            | table_column_definition
+    '''
+    if len(p) == 4:
+        p[0] = [p[1]] + p[3]
+    else:
+        p[0] = [p[1]]
+
+def p_table_column_definition(p):
+    '''table_column_definition : IDENTIFIER column_type
+                               | IDENTIFIER column_type PRIMARY KEY
     '''
     if len(p) == 5:
-        p[0] = [(p[1], p[2])] + p[4]
+        p[0] = [p[1], p[2], ['PRIMARY KEY']]
     else:
-        p[0] = [(p[1], p[2])]
+        p[0] = [p[1], p[2], []]
 
 def p_column_type(p):
     '''column_type : INT
