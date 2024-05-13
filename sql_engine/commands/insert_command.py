@@ -2,6 +2,7 @@ from .sql_command import SqlCommand
 from ..sql_types.sql_type_mapping import sql_type_mapping
 from ..data_serialization.writer import Writer
 from ..data_serialization.schema import get_latest_schema
+from ..storage.storage import TableStorage
 
 class InsertCommand(SqlCommand):
     def __init__(self, table, columns, values):
@@ -28,6 +29,7 @@ class InsertCommand(SqlCommand):
             self.columns.index(column): column_names.index(column) for column in self.columns
         }
 
+        # insert into persons (name) values ('jordan'), ('cameron'), ('louise'), ('agneta')
         insert_values = []
         for value_list in self.values:
             sorted_values_list = [None] * (len(value_list))
@@ -62,5 +64,8 @@ class InsertCommand(SqlCommand):
                 
             insert_values.append(sorted_values_list)
 
-        writer = Writer(self.table)
-        writer.write(insert_values)
+        # TEMP
+        storage = TableStorage()
+        storage.write_data_to_table(self.table, insert_values)
+        # writer = Writer(self.table, schema['version'])
+        # writer.write(insert_values)

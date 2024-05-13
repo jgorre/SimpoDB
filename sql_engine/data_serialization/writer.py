@@ -1,11 +1,9 @@
 from ..constants import DATA_PATH
-from .schema import get_latest_schema
 
 class Writer:
-    def __init__(self, table):
-        schema = get_latest_schema(table)
+    def __init__(self, table, schema_version):
         self._table = table
-        self._byte_writer = ByteWriter(schema['version'])
+        self._byte_writer = ByteWriter(schema_version)
 
     def write(self, values: list[list[object]]):
         encoded_values = b''

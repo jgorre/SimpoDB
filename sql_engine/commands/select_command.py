@@ -1,5 +1,6 @@
 from .sql_command import SqlCommand
 from ..data_serialization.reader import ByteReader
+from ..storage.storage import TableStorage
 
 class SelectCommand(SqlCommand):
     def __init__(self, columns, table):
@@ -8,8 +9,5 @@ class SelectCommand(SqlCommand):
         self.table = table
 
     def execute(self):
-        reader = ByteReader()
-        # where_condition = lambda row: row[1] == 'jakobsson'
-        # values = reader.get_values(self.table, where_condition)
-        values = reader.get_values(self.table)
-        print(values)
+        storage = TableStorage()
+        print(storage.get_memtable('persons').keys())

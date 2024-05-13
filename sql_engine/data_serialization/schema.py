@@ -2,12 +2,21 @@ import json
 
 from ..constants import DATA_PATH
 
-def get_latest_schema(table_name: str):
+def get_schema_path(table_name: str):
     schema_path = DATA_PATH / table_name / 'schema.json'
 
     if not schema_path.exists():
         return None
+    
+    return schema_path
 
+def get_all_schemas(table_name: str):
+    schema_path = get_schema_path(table_name)
+    with open(schema_path, 'r') as schemas:
+        return json.load(schemas)
+
+def get_latest_schema(table_name: str):
+    schema_path = get_schema_path(table_name)
     with open(schema_path, 'r') as schema:
         schemas = json.load(schema)
         num_schemas = len(schemas)

@@ -1,6 +1,14 @@
-
+from .schema import get_all_schemas
+from ..constants import DATA_PATH
 
 class ByteReader:
+    def __init__(self):
+        pass
+
+    def superdooper(self, table_name: str):
+        table_data_path = DATA_PATH / table_name / 'data'
+        
+
     def read_bytes(self, schema, bytez: bytes):
         self.byte_index = 0
         self.bytez = bytez
