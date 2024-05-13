@@ -64,8 +64,5 @@ class InsertCommand(SqlCommand):
                 
             insert_values.append(sorted_values_list)
 
-        # TEMP
         storage = TableStorage()
-        storage.write_data_to_table(self.table, insert_values)
-        # writer = Writer(self.table, schema['version'])
-        # writer.write(insert_values)
+        storage.write_data_to_table(self.table, schema, insert_values)

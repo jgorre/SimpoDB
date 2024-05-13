@@ -10,4 +10,4 @@ class SelectCommand(SqlCommand):
 
     def execute(self):
         storage = TableStorage()
-        print(storage.get_memtable('persons').keys())
+        storage.read(self.table)
