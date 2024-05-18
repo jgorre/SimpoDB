@@ -3,6 +3,8 @@ from pathlib import Path
 import json
 
 from ..constants import DATA_PATH
+from .data_for_insert import DataForInsert
+from .path_manager import PathManager
 
 class TableStorage:
     _instance = None
@@ -18,49 +20,57 @@ class TableStorage:
             self.memtables = {}
             self.initialized = True
 
-        # Do this first when you come back
-        self.initialize_memtables()
+        self.path_manager = PathManager()
 
-    def write_data_to_table(self, table: str, schema: dict, data: list[list]):
+    def initialize_memtables(self):
+        tables = [f.name for f in DATA_PATH.iterdir() if f.is_dir()]
+        for table in tables:
+            write_ahead_log = DATA_PATH / table / 'writeahead.log'
+            if not write_ahead_log.exists():
+                continue
+
+            with open(write_ahead_log, 'r') as log:
+                for line in log:
+                    data = DataForInsert.from_dict(json.loads(line))
+                    self._write_to_memtable(table, [data])
+
+
+    def write_data_to_table(self, table: str, data: list[DataForInsert]):
+        self._write_to_log(table, data)
+        self._write_to_memtable(table, data)
+
+    def _write_to_log(self, table: str, data: list[DataForInsert]):
+        json_data = [json.dumps(d.to_dict(), separators=(',', ':')) for d in data]
+
+        write_ahead_log_path = self.path_manager.get_write_ahead_log_path(table)
+        with open(write_ahead_log_path, 'a') as log:
+            for line in json_data:
+                log.write(line + '\n')
+
+    def _write_to_memtable(self, table: str, data: list[DataForInsert]):
         if table not in self.memtables.keys():
             self._instantiate_memtable(table)
 
-        primary_key = schema['primary_key']
-        schema_version = schema['version']
-        
         memtable = self._get_memtable(table)
-        primary_key = schema['primary_key']
-        columns = schema['columns']
-        primary_key_index = next((index for index, item in enumerate(columns) if item['name'] == primary_key), None)
-
-        if primary_key_index is None:
-            raise ValueError("Explode")
-        
         for row in data:
-            key = row[primary_key_index]
-            memtable[key] = { 'entity': row, '__schema_version': schema_version }
+            key = row.data[row.primary_key_index]
+            memtable[key] = { 'entity': row.data, '__schema_version': row.schema_version }
 
-        # If memtable chonky, do stuff
             
     def read(self, table: str):
         memtable = self._get_memtable(table)
         print(memtable)
 
     def _get_memtable(self, table: str) -> SortedDict:
-        return self.memtables[table]
+        try:
+            return self.memtables[table]
+        except KeyError:
+            return SortedDict()
+    
     
     def _instantiate_memtable(self, table: str):
-        # Initially implement WAL with JSON encoding for simplicity
-
         if table in self.memtables.keys():
             print(f'WARN - memtable "{table}" already exists')
             return
 
         self.memtables[table] = SortedDict()
-
-        def open_writeahead_log(table: str):
-            writeahead_log_path = DATA_PATH / table / 'writeahead.log'
-            if writeahead_log_path.exists():
-                with open(writeahead_log_path, 'r') as file:
-                    for row in file:
-                        log_row = json.loads(row)

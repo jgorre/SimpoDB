@@ -3,6 +3,7 @@ from ..sql_types.sql_type_mapping import sql_type_mapping
 from ..data_serialization.writer import Writer
 from ..data_serialization.schema import get_latest_schema
 from ..storage.storage import TableStorage
+from ..storage.data_for_insert import DataForInsert
 
 class InsertCommand(SqlCommand):
     def __init__(self, table, columns, values):
@@ -29,8 +30,15 @@ class InsertCommand(SqlCommand):
             self.columns.index(column): column_names.index(column) for column in self.columns
         }
 
-        # insert into persons (name) values ('jordan'), ('cameron'), ('louise'), ('agneta')
-        insert_values = []
+        schema_version = schema['version']
+        primary_key = schema['primary_key']
+        columns = schema['columns']
+        primary_key_index = next((index for index, item in enumerate(columns) if item['name'] == primary_key), None)
+
+        if primary_key_index is None:
+            raise ValueError("Explode")
+
+        insertion_data = []
         for value_list in self.values:
             sorted_values_list = [None] * (len(value_list))
 
@@ -62,7 +70,7 @@ class InsertCommand(SqlCommand):
                     return
 
                 
-            insert_values.append(sorted_values_list)
+            insertion_data.append(DataForInsert(sorted_values_list, schema_version, primary_key_index))
 
         storage = TableStorage()
-        storage.write_data_to_table(self.table, schema, insert_values)
+        storage.write_data_to_table(self.table, insertion_data)
