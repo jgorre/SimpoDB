@@ -19,12 +19,11 @@ def get_latest_schema(table_name: str):
     schema_path = get_schema_path(table_name)
     with open(schema_path, 'r') as schema:
         schemas = json.load(schema)
-        num_schemas = len(schemas)
-        latest_schema_index = num_schemas - 1
-        return schemas[latest_schema_index]
+        latest_version = max(schemas.keys(), key=int)
+        return latest_version, schemas[latest_version]
     
 def get_schema_columns(table_name: str):
-    schema = get_latest_schema(table_name)
+    _, schema = get_latest_schema(table_name)
     return schema['columns']
     
 def create_schema(table_name: str, schema: dict):

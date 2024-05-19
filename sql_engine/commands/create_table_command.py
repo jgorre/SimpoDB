@@ -14,9 +14,8 @@ class CreateTableCommand(SqlCommand):
 
 
     def _schema(self):
-        return [
-            {
-                "version": 0,
+        return {
+            0: {
                 "columns": [{
                     "name": column_name,
                     "type": column_type.upper(),
@@ -24,4 +23,4 @@ class CreateTableCommand(SqlCommand):
                 } for column_name, column_type, attributes in self.columns],
                 "primary_key": self.primary_key
             }
-        ]
+        }

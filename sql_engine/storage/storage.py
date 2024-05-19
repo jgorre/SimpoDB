@@ -7,6 +7,7 @@ from ..constants import DATA_PATH
 from .data_for_insert import DataForInsert
 from .path_manager import PathManager
 from ..data_serialization import writer
+from ..data_serialization import reader
 
 class TableStorage:
     _instance = None
@@ -41,7 +42,8 @@ class TableStorage:
 
     def _should_memtable_be_flushed(self, table: str):
         # return asizeof(memtable) > 5_000
-        return len(self._get_memtable(table)) > 5
+        # return len(self._get_memtable(table)) > 5
+        return len(self._get_memtable(table)) > 2
 
 
     def write_data_to_table(self, table: str, data: list[DataForInsert]):
@@ -92,8 +94,10 @@ class TableStorage:
 
             
     def read(self, table: str):
-        memtable = self._get_memtable(table)
-        print(memtable)
+        sstable_path = self.path_manager.get_sstables_path(table)
+        for p in sstable_path.iterdir():
+            reader.decode(table, p)
+
 
     def _get_memtable(self, table: str) -> SortedDict:
         try:
