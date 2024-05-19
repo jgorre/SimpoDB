@@ -1,10 +1,12 @@
 from sortedcontainers import SortedDict
-from pathlib import Path
+from pympler.asizeof import asizeof
+import time
 import json
 
 from ..constants import DATA_PATH
 from .data_for_insert import DataForInsert
 from .path_manager import PathManager
+from ..data_serialization import writer
 
 class TableStorage:
     _instance = None
@@ -34,10 +36,21 @@ class TableStorage:
                     data = DataForInsert.from_dict(json.loads(line))
                     self._write_to_memtable(table, [data])
 
+            if self._should_memtable_be_flushed(table):
+                self._write_sstable(table)
+
+    def _should_memtable_be_flushed(self, table: str):
+        # return asizeof(memtable) > 5_000
+        return len(self._get_memtable(table)) > 5
+
 
     def write_data_to_table(self, table: str, data: list[DataForInsert]):
         self._write_to_log(table, data)
         self._write_to_memtable(table, data)
+
+        if self._should_memtable_be_flushed(table):
+            self._write_sstable(table)
+
 
     def _write_to_log(self, table: str, data: list[DataForInsert]):
         json_data = [json.dumps(d.to_dict(), separators=(',', ':')) for d in data]
@@ -52,9 +65,30 @@ class TableStorage:
             self._instantiate_memtable(table)
 
         memtable = self._get_memtable(table)
+
         for row in data:
             key = row.data[row.primary_key_index]
-            memtable[key] = { 'entity': row.data, '__schema_version': row.schema_version }
+            memtable[key] = { 'data': row.data, '__schema_version': row.schema_version }
+
+
+        
+    def _write_sstable(self, table: str):
+        memtable = self._get_memtable(table)
+
+        encoded_values = [writer.encode(v['data'], v['__schema_version']) for v in memtable.values()]
+
+        nanotime_str = str(time.time_ns())
+        sstables_path = self.path_manager.get_sstables_path(table)
+        new_sstable_name = nanotime_str + '__uncommitted'
+        new_sstable_path = sstables_path / new_sstable_name
+
+        with open(new_sstable_path, 'wb') as data_file:
+            for value in encoded_values:
+                data_file.write(value)
+
+        new_sstable_path.rename(sstables_path / nanotime_str)
+        self.path_manager.get_write_ahead_log_path(table).unlink()
+        self._reset_memtable(table)
 
             
     def read(self, table: str):
@@ -65,7 +99,11 @@ class TableStorage:
         try:
             return self.memtables[table]
         except KeyError:
+            # Do not keep this this way
             return SortedDict()
+        
+    def _reset_memtable(self, table: str):
+        self.memtables[table] = SortedDict()
     
     
     def _instantiate_memtable(self, table: str):

@@ -1,28 +1,28 @@
 from ..constants import DATA_PATH
 
-class Writer:
-    def __init__(self, table, schema_version):
-        self._table = table
-        self._byte_writer = ByteWriter(schema_version)
+# class Writer:
+#     def __init__(self, table, schema_version):
+#         self._table = table
+#         self._byte_writer = ByteWriter(schema_version)
 
-    def write(self, values: list[list[object]]):
-        encoded_values = b''
-        for value_list in values:
-            for value in value_list:
-                if isinstance(value, str):
-                    self._byte_writer.add_string(value)
-                elif isinstance(value, int):
-                    self._byte_writer.add_integer(value)
-                else:
-                    raise ValueError(f"Unsupported type found while compiling bytes: {type(value)}. Value: {value}")
+#     def write(self, values: list[list[object]]):
+#         encoded_values = b''
+#         for value_list in values:
+#             for value in value_list:
+#                 if isinstance(value, str):
+#                     self._byte_writer.add_string(value)
+#                 elif isinstance(value, int):
+#                     self._byte_writer.add_integer(value)
+#                 else:
+#                     raise ValueError(f"Unsupported type found while compiling bytes: {type(value)}. Value: {value}")
             
-            value_bytes = self._byte_writer.build()
-            encoded_values += value_bytes
-            self._byte_writer.reset_bytes()
+#             value_bytes = self._byte_writer.build()
+#             encoded_values += value_bytes
+#             self._byte_writer.reset_bytes()
 
-        data_path = DATA_PATH / self._table / 'data'
-        with open(data_path, 'ab') as file:
-            file.write(encoded_values)
+#         data_path = DATA_PATH / self._table / 'data'
+#         with open(data_path, 'ab') as file:
+#             file.write(encoded_values)
 
 
 class ByteWriter:
@@ -98,3 +98,17 @@ class ByteWriter:
 
     def reset_bytes(self):
         self.bytes = self._schema_version_bytes
+
+
+def encode(data: list, schema_version: int):
+    b_writer = ByteWriter(schema_version)
+
+    for value in data:
+        if isinstance(value, str):
+            b_writer.add_string(value)
+        elif isinstance(value, int):
+            b_writer.add_integer(value)
+        else:
+            raise ValueError(f"Unsupported type found while compiling bytes: {type(value)}. Value: {value}")
+        
+    return b_writer.build()

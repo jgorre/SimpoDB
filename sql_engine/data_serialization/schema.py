@@ -38,3 +38,6 @@ def create_schema(table_name: str, schema: dict):
     schema_file_path = schema_path / "schema.json"
     with open(schema_file_path, "w") as schema_file:
         json.dump(schema, schema_file, indent=4)
+
+    sstables_path = schema_path / 'sstables'
+    sstables_path.mkdir(parents=True, exist_ok=False)
