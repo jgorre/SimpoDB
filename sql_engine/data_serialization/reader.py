@@ -4,21 +4,6 @@ from pathlib import Path
 from .schema import get_all_schemas
         
 
-# def read_bytes(self, schema, bytez: bytes):
-#     self.byte_index = 0
-#     self.bytez = bytez
-
-#     values = []
-#     for column in schema['columns']:
-#         col_type = column['type']
-#         if col_type == 'STRING':
-#             values.append(self._decode_string())
-#         elif col_type == 'INT':
-#             values.append(self._decode_signed_int())
-
-#     return values
-
-
 class ByteStreamProccessor:
     def __init__(self, table: str, binary_data_path: Path):
         self.table = table
@@ -35,17 +20,20 @@ class ByteStreamProccessor:
             schema_version = self._decode_unsigned_int()
             schema = self.schemas[str(schema_version)]
 
+            entity = {}
             for column in schema['columns']:
                 col_type = column['type']
-                print(col_type)
-            break
+                value = None
+                if col_type == 'STRING':
+                    value = self._decode_string()
+                elif col_type == 'INT':
+                    value = self._decode_signed_int()
+                entity[column['name']] = value
+            print(entity)
 
     def _decode_string(self):
         str_length = self._decode_unsigned_int()
-        start = self.byte_index
-        end = self.byte_index + str_length
-        self.byte_index = end
-        return self.bytez[start:end].decode('utf-8')
+        return self.buffer.read(str_length).decode('utf-8')
 
     def _decode_unsigned_int(self):
         unsigned_int = 0
@@ -65,8 +53,8 @@ class ByteStreamProccessor:
         first_byte = True
         is_negative = False
 
-        for byte in self._get_remaining_bytes():
-            self.byte_index += 1
+        while True:
+            byte = int.from_bytes(self.buffer.read(1), 'little')
             if first_byte:
                 is_negative = (byte & 0x01) == 1
                 result |= ((byte & 0x7E) >> 1) << shift_amount
@@ -81,9 +69,6 @@ class ByteStreamProccessor:
             first_byte = False
 
         return -result if is_negative else result
-
-    def _get_remaining_bytes(self):
-        return self.bytez[self.byte_index:]
 
 
 def decode(table: str, file_path: Path):
