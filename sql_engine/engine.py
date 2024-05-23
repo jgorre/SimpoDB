@@ -36,7 +36,7 @@ def handle_sql_command(sql: SqlCommand):
     sql.execute()
 
 def run():
-    TableStorage().initialize_memtables()
+    TableStorage().do_startup_initialization()
     while True:
         try:
             s = input('sql_command > ')
