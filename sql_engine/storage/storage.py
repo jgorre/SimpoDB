@@ -43,7 +43,7 @@ class TableStorage:
     def _should_memtable_be_flushed(self, table: str):
         # return asizeof(memtable) > 5_000
         # return len(self._get_memtable(table)) > 5
-        return len(self._get_memtable(table)) > 2
+        return len(self._get_memtable(table)) > 28
 
 
     def write_data_to_table(self, table: str, data: list[DataForInsert]):
@@ -76,16 +76,33 @@ class TableStorage:
     def _write_sstable(self, table: str):
         memtable = self._get_memtable(table)
 
-        encoded_values = [writer.encode(v['data'], v['__schema_version']) for v in memtable.values()]
+        encoded_values = [
+            (
+                key, 
+                writer.encode(value['data'], value['__schema_version'])
+            ) for key, value in memtable.items()]
 
         nanotime_str = str(time.time_ns())
         sstables_path = self.path_manager.get_sstables_path(table)
+        sstables_path.mkdir(parents=False, exist_ok=True)
+
         new_sstable_name = nanotime_str + '__uncommitted'
         new_sstable_path = sstables_path / new_sstable_name
+        new_sstable_data_path = new_sstable_path / 'data'
+        new_sstable_offsets_path = new_sstable_path / 'offsets'
 
-        with open(new_sstable_path, 'wb') as data_file:
-            for value in encoded_values:
+        new_sstable_path.mkdir(parents=False, exist_ok=True)
+
+        byte_offsets = {}
+
+        with open(new_sstable_data_path, 'wb') as data_file:
+            for index, (key, value) in enumerate(encoded_values):
+                if index % 5 == 0:
+                    byte_offsets[key] = data_file.tell()
                 data_file.write(value)
+
+        with open(new_sstable_offsets_path, 'w') as offsets_file:
+            json.dump(byte_offsets, offsets_file, separators=(',', ':'))
 
         new_sstable_path.rename(sstables_path / nanotime_str)
         self.path_manager.get_write_ahead_log_path(table).unlink()
@@ -96,7 +113,7 @@ class TableStorage:
         sstable_path = self.path_manager.get_sstables_path(table)
         vals = []
         for path in sstable_path.iterdir():
-            for entity in reader.decode(table, path):
+            for entity in reader.decode(table, path / 'data'):
                 vals.append(entity)
 
         print(vals)
@@ -113,7 +130,7 @@ class TableStorage:
         sorted_dirs = sorted(sstable_paths.iterdir(), key=lambda p: int(p.name), reverse=True)
         for path in sorted_dirs:
             print(f'searching path {path} for value {search_key_value}')
-            for entity in reader.decode(table, path):
+            for entity in reader.decode(table, path / 'data'):
                 if entity[search_column] == search_key_value:
                     print(entity)
                     return
