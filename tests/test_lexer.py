@@ -18,7 +18,8 @@ def test_simple_tokens():
         'STAR': '*',
         'COMMA': ',',
         'LPAREN': '(',
-        'RPAREN': ')'
+        'RPAREN': ')',
+        'EQUALS': '='
     }
 
     for token_type, token_value in token_map.items():

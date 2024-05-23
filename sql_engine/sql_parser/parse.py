@@ -16,10 +16,20 @@ def p_sql_statement(p):
     p[0] = p[1]
 
 def p_query(p):
-    '''query : SELECT select_columns FROM IDENTIFIER'''    
+    '''query : SELECT select_columns FROM IDENTIFIER
+             | SELECT select_columns FROM IDENTIFIER where_clause'''    
     columns = p[2]
     table = p[4]
-    p[0] = SelectCommand(columns, table)
+    where_condition = None
+
+    if len(p) == 6:
+        where_condition = p[5]
+
+    p[0] = SelectCommand(columns, table, where_condition)
+
+def p_where_clause(p):
+    '''where_clause : WHERE IDENTIFIER EQUALS number_or_string'''
+    p[0] = [p[2], p[4].strip("'")]
 
 def p_select_columns(p):
     '''select_columns : STAR COMMA select_columns

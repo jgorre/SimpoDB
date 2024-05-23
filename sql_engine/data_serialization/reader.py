@@ -29,7 +29,7 @@ class ByteStreamProccessor:
                 elif col_type == 'INT':
                     value = self._decode_signed_int()
                 entity[column['name']] = value
-            print(entity)
+            yield entity
 
     def _decode_string(self):
         str_length = self._decode_unsigned_int()
@@ -73,4 +73,4 @@ class ByteStreamProccessor:
 
 def decode(table: str, file_path: Path):
     byte_processor = ByteStreamProccessor(table, file_path)
-    byte_processor.process()
+    yield from byte_processor.process()

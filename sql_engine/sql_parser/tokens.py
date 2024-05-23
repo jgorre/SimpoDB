@@ -13,7 +13,8 @@ reserved_keywords = [
    'INSERT',
    'INTO',
    'PRIMARY',
-   'KEY'
+   'KEY',
+   'WHERE'
 ]
 
 # List of token names including reserved words
@@ -23,7 +24,8 @@ tokens = [
    'IDENTIFIER',
    'NUMBER',
    'LPAREN',
-   'RPAREN'
+   'RPAREN',
+   'EQUALS'
 ] + reserved_keywords
 
 # Regular expression rules for simple tokens
@@ -31,6 +33,7 @@ t_STAR   = r'\*'
 t_COMMA  = r','
 t_LPAREN = r'\('
 t_RPAREN = r'\)'
+t_EQUALS = r'='
 
 # A rule for identifiers and reserved words
 def t_IDENTIFIER(t):

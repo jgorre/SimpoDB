@@ -49,4 +49,17 @@ def test_insert_one_row():
 
     assert insert_command.columns == ['col1', 'col2']
     assert insert_command.values == [['1', '2'], ['3', '4'], ['5', '6']]
-    
+
+
+def test_select_with_where_statement_string():
+    sql = "select * from persons where name = 'jimmy'"
+    select_command = parser.parse(sql)
+
+    assert select_command.where_condition == ['name', 'jimmy']    
+
+
+def test_select_with_where_statement_int():
+    sql = "select * from persons where id = 1"
+    select_command = parser.parse(sql)
+
+    assert select_command.where_condition == ['id', 1]

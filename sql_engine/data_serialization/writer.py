@@ -1,5 +1,3 @@
-from ..constants import DATA_PATH
-
 class ByteWriter:
     def __init__(self, schema_version: int):
         self._schema_version_bytes = self._get_schema_version_bytes(schema_version)

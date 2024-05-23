@@ -72,7 +72,6 @@ class TableStorage:
             key = row.data[row.primary_key_index]
             memtable[key] = { 'data': row.data, '__schema_version': row.schema_version }
 
-
         
     def _write_sstable(self, table: str):
         memtable = self._get_memtable(table)
@@ -93,10 +92,31 @@ class TableStorage:
         self._reset_memtable(table)
 
             
-    def read(self, table: str):
+    def read_all(self, table: str):
         sstable_path = self.path_manager.get_sstables_path(table)
-        for p in sstable_path.iterdir():
-            reader.decode(table, p)
+        vals = []
+        for path in sstable_path.iterdir():
+            for entity in reader.decode(table, path):
+                vals.append(entity)
+
+        print(vals)
+
+    def read_entity(self, table: str, condition):
+        search_column, search_key_value = condition
+
+        memtable = self._get_memtable(table)
+        if search_key_value in memtable is not None:
+            print(memtable[search_key_value])
+            return
+        
+        sstable_paths = self.path_manager.get_sstables_path(table)
+        sorted_dirs = sorted(sstable_paths.iterdir(), key=lambda p: int(p.name), reverse=True)
+        for path in sorted_dirs:
+            print(f'searching path {path} for value {search_key_value}')
+            for entity in reader.decode(table, path):
+                if entity[search_column] == search_key_value:
+                    print(entity)
+                    return
 
 
     def _get_memtable(self, table: str) -> SortedDict:
