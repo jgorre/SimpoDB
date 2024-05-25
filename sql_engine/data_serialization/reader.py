@@ -10,13 +10,18 @@ class ByteStreamProccessor:
         self.data_path = binary_data_path
         self.schemas = get_all_schemas(table) # temporary solution. Just pre-emptively load in all schemas.
 
-    def process(self):
+    def process(self, from_byte=None, until_byte=None):
         with open(self.data_path, 'rb') as file:
             self.buffer = io.BytesIO(file.read())
 
-        self.buffer.seek(0)
+        if from_byte is not None:
+            self.buffer.seek(from_byte)
+        else:
+            self.buffer.seek(0)
         
-        while self.buffer.tell() < len(self.buffer.getvalue()):
+        until_byte = until_byte if until_byte is not None else len(self.buffer.getvalue())
+
+        while self.buffer.tell() < until_byte:
             schema_version = self._decode_unsigned_int()
             schema = self.schemas[str(schema_version)]
 
@@ -71,6 +76,6 @@ class ByteStreamProccessor:
         return -result if is_negative else result
 
 
-def decode(table: str, file_path: Path):
+def decode(table: str, file_path: Path, from_byte=None, until_byte=None):
     byte_processor = ByteStreamProccessor(table, file_path)
-    yield from byte_processor.process()
+    yield from byte_processor.process(from_byte, until_byte)

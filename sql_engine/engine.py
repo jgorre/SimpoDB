@@ -32,6 +32,25 @@ person_value_batches = [
     "('Grace', 'gardening', 27),('Henry', 'swimming', 29),('Ivy', 'dancing', 38),('Jack', 'fishing', 41),('Karen', 'knitting', 23),('Leo', 'running', 36),('Mona', 'yoga', 34),('Nate', 'gaming', 29),('Olivia', 'traveling', 25),('Paul', 'writing', 32),('Quincy', 'woodworking', 28),('Rachel', 'bird watching', 31),('Sam', 'tennis', 40),('Tina', 'surfing', 22)"
 ]
 
+position_value_batches = [
+    "(1, 'manager', 'Oversees daily operations and ensures efficiency'),(2, 'developer', 'Creates and maintains software applications'),(3, 'analyst', 'Analyzes data and generates reports for decision-making'),(4, 'designer', 'Develops visual concepts for digital and print media'),(5, 'tester', 'Tests software to ensure functionality and performance'),(6, 'administrator', 'Manages IT infrastructure and systems')",
+    "(7, 'engineer', 'Designs and develops engineering solutions'),(8, 'consultant', 'Provides expert advice to improve business processes'),(9, 'technician', 'Performs technical support and maintenance tasks'),(10, 'coordinator', 'Organizes and coordinates project activities'),(11, 'specialist', 'Focuses on specific areas within a field or industry'),(12, 'architect', 'Designs system and software architectures'),(13, 'planner', 'Plans and schedules project timelines and resources')",
+    "(14, 'strategist', 'Develops strategies to achieve business goals'),(15, 'executive', 'Makes high-level decisions and manages company operations')",
+    "(16, 'officer', 'Enforces rules and ensures compliance'),(17, 'supervisor', 'Supervises and guides team members'),(18, 'trainer', 'Conducts training sessions for employees')",
+    "(19, 'auditor', 'Audits financial records and ensures accuracy'),(20, 'accountant', 'Manages financial accounts and transactions')",
+    "(21, 'recruiter', 'Finds and hires qualified candidates for job openings'),(22, 'marketer', 'Develops and implements marketing campaigns'),(23, 'editor', 'Edits and proofreads content for accuracy and quality'),(24, 'writer', 'Writes content for various platforms and publications'),(25, 'producer', 'Produces multimedia content for distribution'),(26, 'director', 'Directs and oversees department activities'),(27, 'broker', 'Facilitates transactions between buyers and sellers'),(28, 'agent', 'Represents clients in negotiations and transactions')",
+    "(29, 'researcher', 'Conducts research to gather information and insights'),(30, 'investigator', 'Investigates issues and gathers evidence'),(31, 'librarian', 'Manages library resources and assists patrons')",
+    "(32, 'curator', 'Manages collections in museums or galleries'),(33, 'scientist', 'Conducts scientific research and experiments'),(34, 'biologist', 'Studies living organisms and their environments'),(35, 'chemist', 'Studies chemical substances and reactions'),(36, 'physicist', 'Studies physical properties and laws of nature')",
+    "(37, 'geologist', 'Studies the earth and its composition'),(38, 'economist', 'Analyzes economic data and trends'),(39, 'sociologist', 'Studies social behavior and societies'),(40, 'psychologist', 'Studies mental processes and behavior'),(41, 'therapist', 'Provides therapy to improve mental health'),(42, 'counselor', 'Provides guidance and support to clients'),(43, 'nurse', 'Provides medical care to patients'),(44, 'doctor', 'Diagnoses and treats illnesses'),(45, 'pharmacist', 'Dispenses medications and provides advice on their use'),(46, 'surgeon', 'Performs surgical procedures'),(47, 'dentist', 'Provides dental care and treatment')",
+    "(48, 'veterinarian', 'Provides medical care to animals'),(49, 'teacher', 'Educates students in various subjects'),(50, 'professor', 'Teaches and conducts research at a university'),(51, 'principal', 'Manages school operations and staff'),(52, 'coach', 'Trains and guides athletes or teams'),(53, 'artist', 'Creates visual art and works of creativity'),(54, 'musician', 'Performs and composes music')",
+    "(55, 'actor', 'Performs in theatrical productions and films'),(56, 'director', 'Directs theatrical productions and films'),(57, 'producer', 'Produces films, TV shows, or music'),(58, 'dancer', 'Performs dance routines and choreography')",
+    "(59, 'choreographer', 'Creates and directs dance routines'),(60, 'photographer', 'Takes and edits photographs'),(61, 'videographer', 'Records and edits video footage'),(62, 'journalist', 'Reports news and writes articles'),(63, 'reporter', 'Investigates and reports on news stories'),(64, 'editor', 'Reviews and edits written content')",
+    "(65, 'publisher', 'Oversees the production and distribution of publications'),(66, 'publicist', 'Manages public relations and media communications'),(67, 'spokesperson', 'Represents an organization in public communications'),(68, 'diplomat', 'Represents a country in foreign affairs'),(69, 'ambassador', 'Acts as a representative in diplomatic matters'),(70, 'politician', 'Engages in political activities and holds public office'),(71, 'legislator', 'Makes laws and policies'),(72, 'judge', 'Presides over legal proceedings and makes rulings'),(73, 'lawyer', 'Provides legal advice and represents clients'),(74, 'paralegal', 'Assists lawyers with legal tasks'),(75, 'mediator', 'Facilitates negotiation and conflict resolution'),(76, 'consultant', 'Provides expert advice to organizations'),(77, 'advisor', 'Offers advice and guidance on various matters'),(78, 'mentor', 'Guides and supports less experienced individuals'),(79, 'coach', 'Trains and develops skills in individuals or teams'),(80, 'instructor', 'Teaches specific skills or subjects')",
+    "(81, 'tutor', 'Provides individualized academic assistance'),(82, 'lecturer', 'Gives educational talks and presentations'),(83, 'author', 'Writes books and other written works'),(84, 'blogger', 'Writes and manages a blog'),(85, 'influencer', 'Uses social media to influence and engage with audiences'),(86, 'podcaster', 'Creates and hosts podcasts'),(87, 'youtuber', 'Creates and uploads videos on YouTube'),(88, 'streamer', 'Streams live content on platforms like Twitch'),(89, 'gamer', 'Plays video games professionally or as a hobby')",
+    "(90, 'reviewer', 'Reviews products, services, or media'),(91, 'critic', 'Evaluates and critiques creative works'),(92, 'moderator', 'Oversees online forums and discussions'),(93, 'administrator', 'Manages administrative tasks and operations'),(94, 'clerk', 'Performs clerical and administrative duties')",
+    "(95, 'assistant', 'Provides support and assistance to others'),(96, 'secretary', 'Manages office tasks and schedules'),(97, 'receptionist', 'Greets visitors and manages front desk duties'),(98, 'cashier', 'Handles cash transactions and customer service'),(99, 'salesperson', 'Sells products or services to customers'),(100, 'customer service representative', 'Provides assistance and support to customers')",
+]
+
 def handle_sql_command(sql: SqlCommand):
     sql.execute()
 
@@ -48,6 +67,11 @@ def run():
         if s == 'load':
             for batch in person_value_batches:
                 statement = f'insert into persons (name, hobby, age) values {batch}'
+                parsed_sql_command = parser.parse(statement)
+                handle_sql_command(parsed_sql_command)
+
+            for batch in position_value_batches:
+                statement = f'insert into positions (id, name, description) values {batch}'
                 parsed_sql_command = parser.parse(statement)
                 handle_sql_command(parsed_sql_command)
         else:

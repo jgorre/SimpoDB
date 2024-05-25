@@ -2,6 +2,7 @@ from sortedcontainers import SortedDict
 from pympler.asizeof import asizeof
 import time
 import json
+import yaml
 
 from ..constants import DATA_PATH
 from .data_for_insert import DataForInsert
@@ -50,9 +51,13 @@ class TableStorage:
         tables = [f.name for f in DATA_PATH.iterdir() if f.is_dir()]
         for table in tables:
             sstables_path = self.path_manager.get_sstables_path(table)
+
+            if not sstables_path.exists():
+                continue
+
             for path in sstables_path.iterdir():
                 with open(path / 'offsets', 'r') as offset_file:
-                    byte_offsets = json.load(offset_file)
+                    byte_offsets = yaml.safe_load(offset_file)
                     sstable_name = path.name
                     if table not in self.sparse_indexes:
                         self.sparse_indexes[table] = {}
@@ -121,7 +126,7 @@ class TableStorage:
                 data_file.write(value)
 
         with open(new_sstable_offsets_path, 'w') as offsets_file:
-            json.dump(byte_offsets, offsets_file, separators=(',', ':'))
+            yaml.dump(byte_offsets, offsets_file)
 
             if table not in self.sparse_indexes:
                 self.sparse_indexes[table] = {}
@@ -146,19 +151,37 @@ class TableStorage:
         search_column, search_key_value = condition
 
         memtable = self._get_memtable(table)
-        if search_key_value in memtable is not None:
-            print(memtable[search_key_value])
+        if search_key_value in memtable:
+            print(memtable[search_key_value]['data'])
             return
         
         sstables_path = self.path_manager.get_sstables_path(table)
         sorted_dirs = sorted(sstables_path.iterdir(), key=lambda p: int(p.name), reverse=True)
         for path in sorted_dirs:
-            print(f'searching path {path} for value {search_key_value}')
-            for entity in reader.decode(table, path / 'data'):
+            from_byte, until_byte = self._get_byte_range(table, path.name, search_key_value)
+            print(f'searching path {path} for value {search_key_value} between bytes {from_byte} and {until_byte}')
+            for entity in reader.decode(table, path / 'data', from_byte, until_byte):
                 if entity[search_column] == search_key_value:
                     print(entity)
                     return
 
+
+    def _get_byte_range(self, table, sstable_name, search_key_value):
+        sparse_index = self.sparse_indexes[table][sstable_name]
+        keys = list(sparse_index.keys())
+        from_byte = 0
+        to_byte = None
+
+        for i in range(len(keys)):
+            current_key = keys[i]
+            next_key = keys[i + 1] if i + 1 < len(keys) else None
+            
+            if search_key_value >= current_key and (next_key is None or search_key_value < next_key):
+                from_byte = sparse_index[current_key]
+                to_byte = sparse_index[next_key] if next_key is not None else None
+                break
+
+        return from_byte, to_byte
 
     def _get_memtable(self, table: str) -> SortedDict:
         try:
