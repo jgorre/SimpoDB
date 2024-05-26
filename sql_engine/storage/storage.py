@@ -196,6 +196,8 @@ class TableStorage:
             current_key = keys[i]
             next_key = keys[i + 1] if i + 1 < len(keys) else None
             
+            # Error to solve when index is int:
+                # TypeError: '>=' not supported between instances of 'str' and 'int'
             if search_key_value >= current_key and (next_key is None or search_key_value < next_key):
                 from_byte = sparse_index[current_key]
                 to_byte = sparse_index[next_key] if next_key is not None else None
