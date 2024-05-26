@@ -9,6 +9,14 @@ from .data_for_insert import DataForInsert
 from .path_manager import PathManager
 from ..data_serialization import writer
 from ..data_serialization import reader
+from ..data_serialization import schema
+
+# Consider making global schemas object which caches up to x number of schemas
+# What happens when schema is updated though? Should update through the object
+# which handles schemas/caching, so that it can easily make the update.
+
+# Does it cache whole schema files or just individual objects? Probably the whole file?
+
 
 class TableStorage:
     _instance = None
@@ -147,12 +155,11 @@ class TableStorage:
 
         print(vals)
 
-    def read_entity(self, table: str, condition):
-        search_column, search_key_value = condition
+    def read_entity_from_index(self, table: str, indexed_column: str, search_key_value):
+        result_from_memtable = self._get_entity_from_memtable_record(table, search_key_value)
 
-        memtable = self._get_memtable(table)
-        if search_key_value in memtable:
-            print(memtable[search_key_value]['data'])
+        if result_from_memtable is not None:
+            print(result_from_memtable)
             return
         
         sstables_path = self.path_manager.get_sstables_path(table)
@@ -161,10 +168,23 @@ class TableStorage:
             from_byte, until_byte = self._get_byte_range(table, path.name, search_key_value)
             print(f'searching path {path} for value {search_key_value} between bytes {from_byte} and {until_byte}')
             for entity in reader.decode(table, path / 'data', from_byte, until_byte):
-                if entity[search_column] == search_key_value:
+                if entity[indexed_column] == search_key_value:
                     print(entity)
                     return
 
+    def _get_entity_from_memtable_record(self, table: str, key):
+        memtable = self._get_memtable(table)
+
+        if key not in memtable:
+            return None
+        
+        memtable_record = memtable[key]
+        record_schema = schema.get_schema_with_version(table, memtable_record['__schema_version'])
+        entity = {}
+        for i, column in enumerate(record_schema['columns']):
+            entity[column['name']] = memtable_record['data'][i]
+
+        return entity
 
     def _get_byte_range(self, table, sstable_name, search_key_value):
         sparse_index = self.sparse_indexes[table][sstable_name]

@@ -22,6 +22,17 @@ def get_latest_schema(table_name: str):
         latest_version = max(schemas.keys(), key=int)
         return latest_version, schemas[latest_version]
     
+def get_schema_with_version(table_name: str, version: int):
+    schema_path = get_schema_path(table_name)
+    with open(schema_path, 'r') as schema:
+        schemas = json.load(schema)
+
+        try:
+            return schemas[str(version)]
+        except:
+            print(f'Schema version {version} for table {table_name} does not exist.')
+            return None
+    
 def get_schema_columns(table_name: str):
     _, schema = get_latest_schema(table_name)
     return schema['columns']
@@ -40,3 +51,7 @@ def create_schema(table_name: str, schema: dict):
 
     sstables_path = schema_path / 'sstables'
     sstables_path.mkdir(parents=True, exist_ok=False)
+
+def get_primary_key_column_for_table(table_name: str):
+    _, schema = get_latest_schema(table_name)
+    return schema['primary_key']

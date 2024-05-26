@@ -1,5 +1,6 @@
 from .sql_command import SqlCommand
 from ..storage.storage import TableStorage
+from ..data_serialization import schema
 
 class SelectCommand(SqlCommand):
     def __init__(self, columns, table, where_condition=None):
@@ -12,9 +13,14 @@ class SelectCommand(SqlCommand):
     def execute(self):
         if self.where_condition is None:
             self.table_storage.read_all(self.table)
+        elif self._is_search_condition_on_index():
+            indexed_column = self.where_condition[0]
+            search_value = self.where_condition[1]
+            self.table_storage.read_entity_from_index(self.table, indexed_column, search_value)
         else:
-            self.table_storage.read_entity(self.table, self.where_condition)
+            raise NotImplementedError('Search criteria did not match known pattern.')
 
-        # Need to implement sparse in memory hash table per sstable
         # Bloom filter later
-        # SSTable should have sparse in-memory hashmap per index.
+
+    def _is_search_condition_on_index(self):
+        return self.where_condition[0] == schema.get_primary_key_column_for_table(self.table)
