@@ -1,6 +1,6 @@
 from .sql_command import SqlCommand
 from ..storage.storage import TableStorage
-from ..data_serialization import schema
+from ..data_serialization.schema import SchemaManager
 
 class SelectCommand(SqlCommand):
     def __init__(self, columns, table, where_condition=None):
@@ -9,6 +9,8 @@ class SelectCommand(SqlCommand):
         self.table = table
         self.table_storage = TableStorage()
         self.where_condition = where_condition
+
+        self.schema_manager = SchemaManager()
 
     def execute(self):
         if self.where_condition is None:
@@ -23,4 +25,4 @@ class SelectCommand(SqlCommand):
         # Bloom filter later
 
     def _is_search_condition_on_index(self):
-        return self.where_condition[0] == schema.get_primary_key_column_for_table(self.table)
+        return self.where_condition[0] == self.schema_manager.get_primary_key_column_for_table(self.table)

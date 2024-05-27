@@ -1,11 +1,17 @@
 from pathlib import Path
 
-from ..constants import DATA_PATH
+from ..config.config import Config
 
 class PathManager:
+    def __init__(self) -> None:
+        self.data_path = Config().data_path
+
+    def get_data_path(self):
+        return self.data_path
+
     def get_write_ahead_log_path(self, table: str):
-        return DATA_PATH / table / 'writeahead.log'
+        return self.data_path / table / 'writeahead.log'
     
     def get_sstables_path(self, table: str) -> Path:
-        return DATA_PATH / table / 'sstables'
+        return self.data_path / table / 'sstables'
         

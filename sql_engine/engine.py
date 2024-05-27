@@ -23,7 +23,13 @@ def run():
 
 
 class DatabaseEngine:
-    def __init__(self, config: Config) -> None:
+    def __init__(self, config) -> None:
+        # Fix this hackiness
+        Config().initialize(config)
+        db_config = Config()
+        if not db_config.data_path.exists():
+            db_config.data_path.mkdir(parents=True)
+
         TableStorage().do_startup_initialization()
 
     def process_command(self, command: str):

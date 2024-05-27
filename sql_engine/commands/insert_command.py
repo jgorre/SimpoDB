@@ -1,6 +1,6 @@
 from .sql_command import SqlCommand
 from ..sql_types.sql_type_mapping import sql_type_mapping
-from ..data_serialization.schema import get_latest_schema
+from ..data_serialization.schema import SchemaManager
 from ..storage.storage import TableStorage
 from ..storage.data_for_insert import DataForInsert
 
@@ -10,10 +10,12 @@ class InsertCommand(SqlCommand):
         self.table = table
         self.columns = columns
         self.values = values
+        
+        self.schema_manager = SchemaManager()
 
 
     def execute(self):
-        schema_version, schema = get_latest_schema(self.table)
+        schema_version, schema = self.schema_manager.get_latest_schema(self.table)
 
         if schema is None:
             print(f"Table '{self.table}' does not exist")

@@ -4,9 +4,9 @@ import time
 import json
 import yaml
 
-from ..constants import DATA_PATH
 from .data_for_insert import DataForInsert
 from .path_manager import PathManager
+from ..data_serialization.schema import SchemaManager
 from ..data_serialization import writer
 from ..data_serialization import reader
 from ..data_serialization import schema
@@ -34,15 +34,16 @@ class TableStorage:
             self.initialized = True
 
         self.path_manager = PathManager()
+        self.schema_manager = SchemaManager()
 
     def do_startup_initialization(self):
         self._initialize_memtables()
         self._initialize_sparse_indexes()
 
     def _initialize_memtables(self):
-        tables = [f.name for f in DATA_PATH.iterdir() if f.is_dir()]
+        tables = [f.name for f in self.path_manager.get_data_path().iterdir() if f.is_dir()]
         for table in tables:
-            write_ahead_log = DATA_PATH / table / 'writeahead.log'
+            write_ahead_log = self.path_manager.get_data_path() / table / 'writeahead.log'
             if not write_ahead_log.exists():
                 continue
 
@@ -56,7 +57,7 @@ class TableStorage:
 
 
     def _initialize_sparse_indexes(self):
-        tables = [f.name for f in DATA_PATH.iterdir() if f.is_dir()]
+        tables = [f.name for f in self.path_manager.get_data_path().iterdir() if f.is_dir()]
         for table in tables:
             sstables_path = self.path_manager.get_sstables_path(table)
 
@@ -179,7 +180,7 @@ class TableStorage:
             return None
         
         memtable_record = memtable[key]
-        record_schema = schema.get_schema_with_version(table, memtable_record['__schema_version'])
+        record_schema = self.schema_manager.get_schema_with_version(table, memtable_record['__schema_version'])
         entity = {}
         for i, column in enumerate(record_schema['columns']):
             entity[column['name']] = memtable_record['data'][i]

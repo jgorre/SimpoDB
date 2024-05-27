@@ -1,5 +1,3 @@
-from sql_engine.engine import DatabaseEngine
-
 person_value_batches = [
     "('Alice', 'painting', 34),('Bob', 'cycling', 29),('Cathy', 'photography', 25),('David', 'hiking', 32)",
     "('Eva', 'reading', 28),('Frank', 'cooking', 31),('Grace', 'gardening', 40),('Henry', 'swimming', 22),('Ivy', 'dancing', 26)",
@@ -49,8 +47,15 @@ position_value_batches = [
     "(95, 'assistant', 'Provides support and assistance to others'),(96, 'secretary', 'Manages office tasks and schedules'),(97, 'receptionist', 'Greets visitors and manages front desk duties'),(98, 'cashier', 'Handles cash transactions and customer service'),(99, 'salesperson', 'Sells products or services to customers'),(100, 'customer service representative', 'Provides assistance and support to customers')",
 ]
 
+import yaml
+
+from sql_engine.engine import DatabaseEngine
+from sql_engine.config.config import Config
+
 if __name__ == '__main__':
-    engine = DatabaseEngine(None)
+    with open('config.yml', 'r') as config_file:
+        config = yaml.safe_load(config_file)
+        engine = DatabaseEngine(config)
     
     while True:
         try:
@@ -64,9 +69,9 @@ if __name__ == '__main__':
         if s == 'load':
             for batch in person_value_batches:
                 statement = f'insert into persons (name, hobby, age) values {batch}'
-                engine.process_command(s)
+                engine.process_command(statement)
             for batch in position_value_batches:
                 statement = f'insert into positions (id, name, description) values {batch}'
-                engine.process_command(s)
+                engine.process_command(statement)
         else:
             engine.process_command(s)

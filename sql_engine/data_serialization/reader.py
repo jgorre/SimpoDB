@@ -1,14 +1,14 @@
 import io
 from pathlib import Path
 
-from .schema import get_all_schemas
+from .schema import SchemaManager
         
 
 class ByteStreamProccessor:
     def __init__(self, table: str, binary_data_path: Path):
         self.table = table
         self.data_path = binary_data_path
-        self.schemas = get_all_schemas(table) # temporary solution. Just pre-emptively load in all schemas.
+        self.schemas = SchemaManager().get_all_schemas(table) # temporary solution. Just pre-emptively load in all schemas.
 
     def process(self, from_byte=None, until_byte=None):
         with open(self.data_path, 'rb') as file:
