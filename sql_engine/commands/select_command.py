@@ -14,11 +14,15 @@ class SelectCommand(SqlCommand):
 
     def execute(self):
         if self.where_condition is None:
-            self.table_storage.read_all(self.table)
+            result = self.table_storage.read_all(self.table)
+            print(result)
+            return result
         elif self._is_search_condition_on_index():
             indexed_column = self.where_condition[0]
             search_value = self.where_condition[1]
-            self.table_storage.read_entity_from_index(self.table, indexed_column, search_value)
+            result = self.table_storage.read_entity_from_index(self.table, indexed_column, search_value)
+            print(result)
+            return result
         else:
             raise NotImplementedError('Search criteria did not match known pattern.')
 

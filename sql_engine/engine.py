@@ -6,7 +6,7 @@ from .config.config import Config
 
 
 def handle_sql_command(sql: SqlCommand):
-    sql.execute()
+    return sql.execute()
 
 def run():
     TableStorage().do_startup_initialization()
@@ -34,4 +34,4 @@ class DatabaseEngine:
 
     def process_command(self, command: str):
         parsed_sql_command = parser.parse(command)
-        handle_sql_command(parsed_sql_command)
+        return handle_sql_command(parsed_sql_command)

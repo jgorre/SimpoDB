@@ -154,28 +154,42 @@ class TableStorage:
             for entity in reader.decode(table, path / 'data'):
                 vals.append(entity)
 
-        print(vals)
+        return vals
 
     def read_entity_from_index(self, table: str, indexed_column: str, search_key_value):
-        result_from_memtable = self._get_entity_from_memtable_record(table, search_key_value)
+        cast_search_key_value = self._convert_key_to_table_key_type(table, search_key_value)
+
+        result_from_memtable = self._get_entity_from_memtable_record(table, cast_search_key_value)
 
         if result_from_memtable is not None:
-            print(result_from_memtable)
-            return
+            return result_from_memtable            
         
         sstables_path = self.path_manager.get_sstables_path(table)
         sorted_dirs = sorted(sstables_path.iterdir(), key=lambda p: int(p.name), reverse=True)
         for path in sorted_dirs:
-            from_byte, until_byte = self._get_byte_range(table, path.name, search_key_value)
-            print(f'searching path {path} for value {search_key_value} between bytes {from_byte} and {until_byte}')
+            from_byte, until_byte = self._get_byte_range(table, path.name, cast_search_key_value)
+
+            if from_byte is None:
+                continue
+
+            print(f'searching path {path} for value {cast_search_key_value} between bytes {from_byte} and {until_byte}')
             for entity in reader.decode(table, path / 'data', from_byte, until_byte):
-                if entity[indexed_column] == search_key_value:
-                    print(entity)
-                    return
+                if entity[indexed_column] == cast_search_key_value:
+                    return entity
+
+
+    def _convert_key_to_table_key_type(self, table, key):
+        memtable = self._get_memtable(table)
+        key_type = type(memtable.keys()[0])
+        return key_type(key)
+        
 
     def _get_entity_from_memtable_record(self, table: str, key):
         memtable = self._get_memtable(table)
 
+        if len(memtable) == 0:
+            return None
+        
         if key not in memtable:
             return None
         
@@ -190,7 +204,7 @@ class TableStorage:
     def _get_byte_range(self, table, sstable_name, search_key_value):
         sparse_index = self.sparse_indexes[table][sstable_name]
         keys = list(sparse_index.keys())
-        from_byte = 0
+        from_byte = None
         to_byte = None
 
         for i in range(len(keys)):
