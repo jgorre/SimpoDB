@@ -77,7 +77,7 @@ def test_tmp(database_engine):
     assert result
 
 
-def test_tmp(database_engine):
+def test_read_all_contains_only_latest_writes_per_key(database_engine):
     create_table_statement = 'create table pplz (name string primary key, recency string)'
     database_engine.process_command(create_table_statement)
 
@@ -88,21 +88,20 @@ def test_tmp(database_engine):
 
     for name in names:
         statement = insert_p(name, 'oldest')
-        print(statement)
         database_engine.process_command(statement)
 
     for name in names:
         statement = insert_p(name, 'older')
-        print(statement)
         database_engine.process_command(statement)
 
     for name in names:
         statement = insert_p(name, 'latest')
-        print(statement)
         database_engine.process_command(statement)
 
     query = "select * from pplz"
     result = database_engine.process_command(query)
+
+    assert len(result) == len(names)
 
     bad_vals = [val for val in result if val['recency'] != 'latest']
 

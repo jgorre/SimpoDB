@@ -154,7 +154,7 @@ class TableStorage:
         def get_file_iterator(file_path):
             yield from reader.decode(table, file_path)
 
-        sstable_iterators = [get_file_iterator(path / 'data') for path in reversed(list(sstable_path.iterdir()))]
+        sstable_iterators = [get_file_iterator(path / 'data') for path in sorted(list(sstable_path.iterdir()), reverse=True)]
 
         heap = []
         keys = set()
@@ -165,6 +165,12 @@ class TableStorage:
             value = next(iterator)
             key = value[primary_key_column]
             heapq.heappush(heap, (key, iter_index, value))
+
+        memtable = self._get_memtable(table)
+
+        for key in memtable:
+            keys.add(key)
+            yield self._get_entity_from_memtable_record(table, key)
 
         while heap:
             key, iter_index, value = heapq.heappop(heap)
@@ -179,10 +185,6 @@ class TableStorage:
                 next_key = next_value[primary_key_column]
                 heapq.heappush(heap, (next_key, iter_index, next_value))
 
-        memtable = self._get_memtable(table)
-
-        for key in memtable:
-            yield self._get_entity_from_memtable_record(table, key)
 
             
 
@@ -241,8 +243,6 @@ class TableStorage:
             current_key = keys[i]
             next_key = keys[i + 1] if i + 1 < len(keys) else None
             
-            # Error to solve when index is int:
-                # TypeError: '>=' not supported between instances of 'str' and 'int'
             if search_key_value >= current_key and (next_key is None or search_key_value < next_key):
                 from_byte = sparse_index[current_key]
                 to_byte = sparse_index[next_key] if next_key is not None else None
