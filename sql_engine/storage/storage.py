@@ -3,6 +3,7 @@ from pympler.asizeof import asizeof
 import time
 import json
 import yaml
+import heapq
 
 from .data_for_insert import DataForInsert
 from .path_manager import PathManager
@@ -149,12 +150,41 @@ class TableStorage:
             
     def read_all(self, table: str):
         sstable_path = self.path_manager.get_sstables_path(table)
-        vals = []
-        for path in sstable_path.iterdir():
-            for entity in reader.decode(table, path / 'data'):
-                vals.append(entity)
+        
+        def get_file_iterator(file_path):
+            yield from reader.decode(table, file_path)
 
-        return vals
+        sstable_iterators = [get_file_iterator(path / 'data') for path in reversed(list(sstable_path.iterdir()))]
+
+        heap = []
+        keys = set()
+
+        primary_key_column = self.schema_manager.get_primary_key_column_for_table(table)
+
+        for iter_index, iterator in enumerate(sstable_iterators):
+            value = next(iterator)
+            key = value[primary_key_column]
+            heapq.heappush(heap, (key, iter_index, value))
+
+        while heap:
+            key, iter_index, value = heapq.heappop(heap)
+
+            if key not in keys:
+                keys.add(key)
+                yield value
+
+            next_value = next(sstable_iterators[iter_index], None)
+
+            if next_value is not None:
+                next_key = next_value[primary_key_column]
+                heapq.heappush(heap, (next_key, iter_index, next_value))
+
+        memtable = self._get_memtable(table)
+
+        for key in memtable:
+            yield self._get_entity_from_memtable_record(table, key)
+
+            
 
     def read_entity_from_index(self, table: str, indexed_column: str, search_key_value):
         cast_search_key_value = self._convert_key_to_table_key_type(table, search_key_value)

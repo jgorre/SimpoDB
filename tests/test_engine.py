@@ -18,12 +18,10 @@ def database_engine():
         "dataPath": "./test/data"
     }
 
-    print('initializing db')
     engine = DatabaseEngine(configuration)
 
     yield engine
 
-    print('cleaning up database stuffs')
     shutil.rmtree('./test')
 
 def test_small_table(database_engine):
@@ -61,5 +59,19 @@ def test_large_table(database_engine):
         database_engine.process_command(insert_statement)
 
     query = "select * from items where id = 5"
+    result = database_engine.process_command(query)
+    assert result
+
+
+def test_tmp(database_engine):
+    create_table_statement = 'create table pickles (id int primary key, str string)'
+    database_engine.process_command(create_table_statement)
+
+    for i in range(0, 100):
+        random_string = ''.join(random.sample('abcdefghijklmnopqrstuvwxyz0123456789', 10))
+        insert_statement = f"insert into pickles (id, str) values ({i}, '{random_string}')"
+        database_engine.process_command(insert_statement)
+
+    query = "select * from pickles"
     result = database_engine.process_command(query)
     assert result

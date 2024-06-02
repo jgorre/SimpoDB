@@ -14,8 +14,9 @@ class SelectCommand(SqlCommand):
 
     def execute(self):
         if self.where_condition is None:
-            result = self.table_storage.read_all(self.table)
-            print(result)
+            result = list(self.table_storage.read_all(self.table))
+            for entity in result:
+                print(entity)
             return result
         elif self._is_search_condition_on_index():
             indexed_column = self.where_condition[0]

@@ -50,7 +50,6 @@ position_value_batches = [
 import yaml
 
 from sql_engine.engine import DatabaseEngine
-from sql_engine.config.config import Config
 
 if __name__ == '__main__':
     with open('config.yml', 'r') as config_file:
