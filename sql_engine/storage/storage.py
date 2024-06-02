@@ -156,21 +156,22 @@ class TableStorage:
 
         sstable_iterators = [get_file_iterator(path / 'data') for path in sorted(list(sstable_path.iterdir()), reverse=True)]
 
-        heap = []
         keys = set()
-
-        primary_key_column = self.schema_manager.get_primary_key_column_for_table(table)
-
-        for iter_index, iterator in enumerate(sstable_iterators):
-            value = next(iterator)
-            key = value[primary_key_column]
-            heapq.heappush(heap, (key, iter_index, value))
-
+        
         memtable = self._get_memtable(table)
 
         for key in memtable:
             keys.add(key)
             yield self._get_entity_from_memtable_record(table, key)
+        
+        primary_key_column = self.schema_manager.get_primary_key_column_for_table(table)
+
+        heap = []
+
+        for iter_index, iterator in enumerate(sstable_iterators):
+            value = next(iterator)
+            key = value[primary_key_column]
+            heapq.heappush(heap, (key, iter_index, value))
 
         while heap:
             key, iter_index, value = heapq.heappop(heap)
