@@ -75,3 +75,35 @@ def test_tmp(database_engine):
     query = "select * from pickles"
     result = database_engine.process_command(query)
     assert result
+
+
+def test_tmp(database_engine):
+    create_table_statement = 'create table pplz (name string primary key, recency string)'
+    database_engine.process_command(create_table_statement)
+
+    def insert_p(name, recency):
+        return f"insert into pplz (name, recency) values ('{name}', '{recency}')"
+    
+    names = ["Alice", "Bob", "Charlie", "David", "Eve", "Frank", "Grace", "Hannah", "Ivy", "Jack", "Kathy", "Liam", "Mia", "Noah", "Olivia", "Paul", "Quinn", "Rachel", "Sam", "Tina", "Uma", "Vince", "Wendy", "Xander", "Yara", "Zack", "Ava", "Ben", "Clara", "Daniel", "Ella", "Felix", "Georgia", "Henry", "Isla", "Jacob", "Karen", "Leo", "Megan", "Nina", "Oscar", "Penny", "Quincy", "Rita", "Sean", "Tara", "Uri", "Victor", "Willow", "Xena", "Yvonne", "Zane", "Amy", "Brian", "Cindy", "Dylan", "Emily", "Finn", "Gina", "Harry", "Iris", "James", "Kelly", "Lucas", "Molly", "Nick", "Opal", "Peter", "Quentin", "Ruby", "Scott", "Tiffany", "Ulysses", "Violet", "Wesley", "Xiomara", "Yasmin", "Zoe", "Abby", "Blake", "Chris", "Dana", "Eli", "Faith", "Gabe", "Holly", "Ian", "Jess", "Kyle", "Lily", "Miles", "Nate", "Owen"]
+
+    for name in names:
+        statement = insert_p(name, 'oldest')
+        print(statement)
+        database_engine.process_command(statement)
+
+    for name in names:
+        statement = insert_p(name, 'older')
+        print(statement)
+        database_engine.process_command(statement)
+
+    for name in names:
+        statement = insert_p(name, 'latest')
+        print(statement)
+        database_engine.process_command(statement)
+
+    query = "select * from pplz"
+    result = database_engine.process_command(query)
+
+    bad_vals = [val for val in result if val['recency'] != 'latest']
+
+    assert len(bad_vals) == 0
