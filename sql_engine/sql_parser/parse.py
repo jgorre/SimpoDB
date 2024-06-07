@@ -17,19 +17,28 @@ def p_sql_statement(p):
 
 def p_query(p):
     '''query : SELECT select_columns FROM IDENTIFIER
-             | SELECT select_columns FROM IDENTIFIER where_clause'''    
+             | SELECT select_columns FROM IDENTIFIER WHERE where_clause'''    
     columns = p[2]
     table = p[4]
     where_condition = None
 
-    if len(p) == 6:
-        where_condition = p[5]
+    if len(p) == 7:
+        where_condition = p[6]
 
     p[0] = SelectCommand(columns, table, where_condition)
 
 def p_where_clause(p):
-    '''where_clause : WHERE IDENTIFIER EQUALS number_or_string'''
-    p[0] = [p[2], p[4].strip("'")]
+    '''where_clause : where_item
+                    | where_item AND where_clause
+                    | where_item OR where_clause'''
+    if len(p) == 4:
+        p[0] = [p[1], p[2]] + p[3]
+    else:
+        p[0] = [p[1]]
+
+def p_where_item(p):
+    '''where_item : IDENTIFIER EQUALS number_or_string'''
+    p[0] = (p[1], p[3].strip("'"))
 
 def p_select_columns(p):
     '''select_columns : STAR COMMA select_columns

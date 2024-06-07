@@ -14,7 +14,9 @@ reserved_keywords = [
    'INTO',
    'PRIMARY',
    'KEY',
-   'WHERE'
+   'WHERE',
+   'AND',
+   'OR'
 ]
 
 # List of token names including reserved words

@@ -157,7 +157,7 @@ class TableStorage:
         sstable_iterators = [get_file_iterator(path / 'data') for path in sorted(list(sstable_path.iterdir()), reverse=True)]
 
         keys = set()
-        
+
         memtable = self._get_memtable(table)
 
         for key in memtable:
@@ -185,8 +185,6 @@ class TableStorage:
             if next_value is not None:
                 next_key = next_value[primary_key_column]
                 heapq.heappush(heap, (next_key, iter_index, next_value))
-
-
             
 
     def read_entity_from_index(self, table: str, indexed_column: str, search_key_value):
@@ -205,7 +203,7 @@ class TableStorage:
             if from_byte is None:
                 continue
 
-            print(f'searching path {path} for value {cast_search_key_value} between bytes {from_byte} and {until_byte}')
+            # print(f'searching path {path} for value {cast_search_key_value} between bytes {from_byte} and {until_byte}')
             for entity in reader.decode(table, path / 'data', from_byte, until_byte):
                 if entity[indexed_column] == cast_search_key_value:
                     return entity
