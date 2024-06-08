@@ -87,7 +87,7 @@ class SelectCommand(SqlCommand):
             entity = {}
             for col in self.columns:
                 entity[col] = res[col]
-                formatted_result.append(entity)
+            formatted_result.append(entity)
 
         return formatted_result
 

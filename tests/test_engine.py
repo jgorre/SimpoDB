@@ -123,4 +123,19 @@ def test_indexed_where_conditions(database_engine):
     query = "select * from pups where name = 'cleo'"
     res = database_engine.process_command(query)
     assert res == [{ 'name': 'cleo', 'age': 22, 'favorite_activity': 'playing with toys' }]
+
+
+def test_search_columns(database_engine):
+    prepare_pups_table(database_engine)
+
+    query = "select age from pups where name = 'cleo'"
+    res = database_engine.process_command(query)
+    assert res == [{ 'age': 22 }]
+
+    query = "select name, favorite_activity from pups where age = 6 or age = 22"
+    res = database_engine.process_command(query)
+    assert res == [
+        { 'name': 'cleo', 'favorite_activity': 'playing with toys' },
+        { 'name': 'luna', 'favorite_activity': 'barking and finding a cozy place to sleep' },
+    ]
     
