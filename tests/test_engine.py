@@ -45,8 +45,8 @@ def test_small_table(database_engine):
     ginger_query = "select * from pups where name = 'ginger'"
     ginger_query_result = database_engine.process_command(ginger_query)
 
-    assert luna_query_result == {'name': 'luna', 'age': 6, 'favorite_activity': 'barking and finding a cozy place to sleep'}
-    assert ginger_query_result == {'name': 'ginger', 'age': 15, 'favorite_activity': 'cuddling'}
+    assert luna_query_result == [{'name': 'luna', 'age': 6, 'favorite_activity': 'barking and finding a cozy place to sleep'}]
+    assert ginger_query_result == [{'name': 'ginger', 'age': 15, 'favorite_activity': 'cuddling'}]
 
 
 def test_large_table(database_engine):
