@@ -59,6 +59,7 @@ if __name__ == '__main__':
     while True:
         try:
             s = input('sql_command > ')
+            print()
         except EOFError:
             break
         if not s: 
@@ -74,3 +75,5 @@ if __name__ == '__main__':
                 engine.process_command(statement)
         else:
             engine.process_command(s)
+
+        print()

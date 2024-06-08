@@ -1,24 +1,35 @@
 from .sql_command import SqlCommand
 from ..storage.storage import TableStorage
 from ..data_serialization.schema import SchemaManager
+from sympy.parsing.sympy_parser import parse_expr
 
 class SelectCommand(SqlCommand):
-    def __init__(self, columns, table, where_condition=None):
+    def __init__(self, columns, table, where_statement=None):
         self.table_storage = TableStorage()
         self.schema_manager = SchemaManager()
 
         self.type = 'SELECT'
         self.columns = columns
         self.table = table
-        self.where_condition = where_condition
+        self.where_statement = where_statement
+        self.conditions = None
+        
+        if where_statement is not None:
+            self.conditions = [condition for condition in self.where_statement if isinstance(condition, tuple)]
+
         self.primary_key_column = self.schema_manager.get_primary_key_column_for_table(self.table)
 
     def execute(self):
         result = []
-        if self.where_condition is None:
+        if self.where_statement is None:
             result = list(self.table_storage.read_all(self.table))
-        elif self._is_search_condition_on_index():
-            primary_key_condition = [c for c in self.where_condition if c[0] == self.primary_key_column][0]
+            formatted_result = self._format_result(result)
+            for entity in formatted_result:
+                print(entity)
+            return formatted_result
+        
+        if self._is_search_condition_on_index():
+            primary_key_condition = [c for c in self.where_statement if c[0] == self.primary_key_column][0]
             indexed_column = primary_key_condition[0]
             search_value = primary_key_condition[1]
             result = [self.table_storage.read_entity_from_index(self.table, indexed_column, search_value)]
@@ -42,14 +53,14 @@ class SelectCommand(SqlCommand):
         # Bloom filter later
 
     def _is_search_condition_on_index(self):
-        for condition in self.where_condition:
-            if isinstance(condition, tuple) and condition[0] == self.primary_key_column:
+        for condition in self.conditions:
+            if condition[0] == self.primary_key_column:
                 return True
             
         return False
     
     def _does_entity_pass_search_condition(self, entity):
-        def evaluate_condition(entity, condition):
+        def evaluate_condition(condition):
             search_col, search_value = condition
             try:
                 entity_val = entity[search_col]
@@ -61,20 +72,17 @@ class SelectCommand(SqlCommand):
 
             return entity[search_col] == cast_search_val
 
-        result = evaluate_condition(entity, self.where_condition[0])
+        result_tokens = []
+        for token in self.where_statement:
+            if not isinstance(token, tuple):
+                result_tokens.append(token)
+                continue
+            condition = token
+            result_tokens.append(evaluate_condition(condition))
         
-        for i in range(1, len(self.where_condition), 2):
-            logical_operator = self.where_condition[i].upper()
-            next_condition = self.where_condition[i + 1]
-            
-            if logical_operator == 'AND':
-                result = result and evaluate_condition(entity, next_condition)
-            elif logical_operator == 'OR':
-                result = result or evaluate_condition(entity, next_condition)
-            else:
-                raise ValueError(f"Unknown logical operator: {logical_operator}")
-        
-        return result
+        boolean_statement_tokens = [str(s).lower() for s in result_tokens]
+        boolean_statement_string = " ".join(boolean_statement_tokens)
+        return parse_expr(boolean_statement_string)
     
 
     def _format_result(self, result):

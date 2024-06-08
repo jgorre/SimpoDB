@@ -6,9 +6,9 @@ _tabversion = '3.10'
 
 _lr_method = 'LALR'
 
-_lr_signature = 'AND COMMA CREATE EQUALS FROM IDENTIFIER INSERT INT INTO KEY LPAREN NUMBER OR PRIMARY RPAREN SCHEMA SELECT STAR STRING TABLE VALUES WHEREsql_statement : query \n                     | create_schema\n                     | create_table\n                     | insert_statement\n    query : SELECT select_columns FROM IDENTIFIER\n             | SELECT select_columns FROM IDENTIFIER WHERE where_clausewhere_clause : where_item\n                    | where_item AND where_clause\n                    | where_item OR where_clausewhere_item : IDENTIFIER EQUALS number_or_stringselect_columns : STAR COMMA select_columns\n                      | STAR\n                      | IDENTIFIER COMMA select_columns\n                      | IDENTIFIER\n    create_schema : CREATE SCHEMA IDENTIFIERcreate_table : CREATE TABLE IDENTIFIER LPAREN create_table_columns RPARENcreate_table_columns : table_column_definition COMMA create_table_columns\n                            | table_column_definition\n    table_column_definition : IDENTIFIER column_type\n                               | IDENTIFIER column_type PRIMARY KEY\n    column_type : INT\n                   | STRING\n    insert_statement : INSERT INTO IDENTIFIER LPAREN insert_column_names RPAREN VALUES insert_column_valuesinsert_column_names : IDENTIFIER COMMA insert_column_names\n                           | IDENTIFIER\n    insert_column_values : LPAREN insert_values RPAREN COMMA insert_column_values\n                            | LPAREN insert_values RPAREN\n    insert_values : number_or_string COMMA insert_values\n                     | number_or_string\n    number_or_string : STRING\n                            | NUMBER\n    '
+_lr_signature = 'AND COMMA CREATE EQUALS FROM IDENTIFIER INSERT INT INTO KEY LPAREN NUMBER OR PRIMARY RPAREN SCHEMA SELECT STAR STRING TABLE VALUES WHEREsql_statement : query \n                     | create_schema\n                     | create_table\n                     | insert_statement\n    query : SELECT select_columns FROM IDENTIFIER\n             | SELECT select_columns FROM IDENTIFIER WHERE where_clausewhere_clause : where_item\n                    | where_item and_or where_clause\n                    | LPAREN where_clause RPAREN\n                    | LPAREN where_clause RPAREN and_or where_clauseand_or : AND\n              | ORwhere_item : IDENTIFIER EQUALS number_or_stringselect_columns : STAR COMMA select_columns\n                      | STAR\n                      | IDENTIFIER COMMA select_columns\n                      | IDENTIFIER\n    create_schema : CREATE SCHEMA IDENTIFIERcreate_table : CREATE TABLE IDENTIFIER LPAREN create_table_columns RPARENcreate_table_columns : table_column_definition COMMA create_table_columns\n                            | table_column_definition\n    table_column_definition : IDENTIFIER column_type\n                               | IDENTIFIER column_type PRIMARY KEY\n    column_type : INT\n                   | STRING\n    insert_statement : INSERT INTO IDENTIFIER LPAREN insert_column_names RPAREN VALUES insert_column_valuesinsert_column_names : IDENTIFIER COMMA insert_column_names\n                           | IDENTIFIER\n    insert_column_values : LPAREN insert_values RPAREN COMMA insert_column_values\n                            | LPAREN insert_values RPAREN\n    insert_values : number_or_string COMMA insert_values\n                     | number_or_string\n    number_or_string : STRING\n                            | NUMBER\n    '
     
-_lr_action_items = {'SELECT':([0,],[6,]),'CREATE':([0,],[7,]),'INSERT':([0,],[8,]),'$end':([1,2,3,4,5,18,21,33,34,38,49,50,51,52,53,56,59,63,],[0,-1,-2,-3,-4,-15,-5,-6,-7,-16,-10,-30,-31,-8,-9,-23,-27,-26,]),'STAR':([6,16,17,],[11,11,11,]),'IDENTIFIER':([6,12,13,14,15,16,17,24,25,26,39,40,43,44,],[10,18,19,20,21,10,10,27,30,32,27,30,32,32,]),'SCHEMA':([7,],[12,]),'TABLE':([7,],[13,]),'INTO':([8,],[14,]),'FROM':([9,10,11,22,23,],[15,-14,-12,-13,-11,]),'COMMA':([10,11,29,30,35,36,37,50,51,54,58,59,],[16,17,39,40,-19,-21,-22,-30,-31,-20,60,61,]),'LPAREN':([19,20,48,61,],[24,25,55,55,]),'WHERE':([21,],[26,]),'INT':([27,],[36,]),'STRING':([27,42,55,60,],[37,50,50,50,]),'RPAREN':([28,29,30,31,35,36,37,46,47,50,51,54,57,58,62,],[38,-18,-25,41,-19,-21,-22,-17,-24,-30,-31,-20,59,-29,-28,]),'EQUALS':([32,],[42,]),'AND':([34,49,50,51,],[43,-10,-30,-31,]),'OR':([34,49,50,51,],[44,-10,-30,-31,]),'PRIMARY':([35,36,37,],[45,-21,-22,]),'VALUES':([41,],[48,]),'NUMBER':([42,55,60,],[51,51,51,]),'KEY':([45,],[54,]),}
+_lr_action_items = {'SELECT':([0,],[6,]),'CREATE':([0,],[7,]),'INSERT':([0,],[8,]),'$end':([1,2,3,4,5,18,21,33,34,39,52,53,54,55,56,59,63,64,68,],[0,-1,-2,-3,-4,-18,-5,-6,-7,-19,-13,-33,-34,-8,-9,-26,-10,-30,-29,]),'STAR':([6,16,17,],[11,11,11,]),'IDENTIFIER':([6,12,13,14,15,16,17,24,25,26,35,40,41,44,45,46,60,],[10,18,19,20,21,10,10,27,30,32,32,27,30,32,-11,-12,32,]),'SCHEMA':([7,],[12,]),'TABLE':([7,],[13,]),'INTO':([8,],[14,]),'FROM':([9,10,11,22,23,],[15,-17,-15,-16,-14,]),'COMMA':([10,11,29,30,36,37,38,53,54,57,62,64,],[16,17,40,41,-22,-24,-25,-33,-34,-23,65,66,]),'LPAREN':([19,20,26,35,44,45,46,51,60,66,],[24,25,35,35,35,-11,-12,58,35,58,]),'WHERE':([21,],[26,]),'INT':([27,],[37,]),'STRING':([27,43,58,65,],[38,53,53,53,]),'RPAREN':([28,29,30,31,34,36,37,38,47,49,50,52,53,54,55,56,57,61,62,63,67,],[39,-21,-28,42,-7,-22,-24,-25,56,-20,-27,-13,-33,-34,-8,-9,-23,64,-32,-10,-31,]),'EQUALS':([32,],[43,]),'AND':([34,52,53,54,56,],[45,-13,-33,-34,45,]),'OR':([34,52,53,54,56,],[46,-13,-33,-34,46,]),'PRIMARY':([36,37,38,],[48,-24,-25,]),'VALUES':([42,],[51,]),'NUMBER':([43,58,65,],[54,54,54,]),'KEY':([48,],[57,]),}
 
 _lr_action = {}
 for _k, _v in _lr_action_items.items():
@@ -17,7 +17,7 @@ for _k, _v in _lr_action_items.items():
       _lr_action[_x][_k] = _y
 del _lr_action_items
 
-_lr_goto_items = {'sql_statement':([0,],[1,]),'query':([0,],[2,]),'create_schema':([0,],[3,]),'create_table':([0,],[4,]),'insert_statement':([0,],[5,]),'select_columns':([6,16,17,],[9,22,23,]),'create_table_columns':([24,39,],[28,46,]),'table_column_definition':([24,39,],[29,29,]),'insert_column_names':([25,40,],[31,47,]),'where_clause':([26,43,44,],[33,52,53,]),'where_item':([26,43,44,],[34,34,34,]),'column_type':([27,],[35,]),'number_or_string':([42,55,60,],[49,58,58,]),'insert_column_values':([48,61,],[56,63,]),'insert_values':([55,60,],[57,62,]),}
+_lr_goto_items = {'sql_statement':([0,],[1,]),'query':([0,],[2,]),'create_schema':([0,],[3,]),'create_table':([0,],[4,]),'insert_statement':([0,],[5,]),'select_columns':([6,16,17,],[9,22,23,]),'create_table_columns':([24,40,],[28,49,]),'table_column_definition':([24,40,],[29,29,]),'insert_column_names':([25,41,],[31,50,]),'where_clause':([26,35,44,60,],[33,47,55,63,]),'where_item':([26,35,44,60,],[34,34,34,34,]),'column_type':([27,],[36,]),'and_or':([34,56,],[44,60,]),'number_or_string':([43,58,65,],[52,62,62,]),'insert_column_values':([51,66,],[59,68,]),'insert_values':([58,65,],[61,67,]),}
 
 _lr_goto = {}
 for _k, _v in _lr_goto_items.items():
@@ -33,29 +33,32 @@ _lr_productions = [
   ('sql_statement -> insert_statement','sql_statement',1,'p_sql_statement','parse.py',14),
   ('query -> SELECT select_columns FROM IDENTIFIER','query',4,'p_query','parse.py',19),
   ('query -> SELECT select_columns FROM IDENTIFIER WHERE where_clause','query',6,'p_query','parse.py',20),
-  ('where_clause -> where_item','where_clause',1,'p_where_clause','parse.py',31),
-  ('where_clause -> where_item AND where_clause','where_clause',3,'p_where_clause','parse.py',32),
-  ('where_clause -> where_item OR where_clause','where_clause',3,'p_where_clause','parse.py',33),
-  ('where_item -> IDENTIFIER EQUALS number_or_string','where_item',3,'p_where_item','parse.py',40),
-  ('select_columns -> STAR COMMA select_columns','select_columns',3,'p_select_columns','parse.py',44),
-  ('select_columns -> STAR','select_columns',1,'p_select_columns','parse.py',45),
-  ('select_columns -> IDENTIFIER COMMA select_columns','select_columns',3,'p_select_columns','parse.py',46),
-  ('select_columns -> IDENTIFIER','select_columns',1,'p_select_columns','parse.py',47),
-  ('create_schema -> CREATE SCHEMA IDENTIFIER','create_schema',3,'p_create_schema','parse.py',55),
-  ('create_table -> CREATE TABLE IDENTIFIER LPAREN create_table_columns RPAREN','create_table',6,'p_create_table','parse.py',62),
-  ('create_table_columns -> table_column_definition COMMA create_table_columns','create_table_columns',3,'p_create_table_columns','parse.py',78),
-  ('create_table_columns -> table_column_definition','create_table_columns',1,'p_create_table_columns','parse.py',79),
-  ('table_column_definition -> IDENTIFIER column_type','table_column_definition',2,'p_table_column_definition','parse.py',87),
-  ('table_column_definition -> IDENTIFIER column_type PRIMARY KEY','table_column_definition',4,'p_table_column_definition','parse.py',88),
-  ('column_type -> INT','column_type',1,'p_column_type','parse.py',96),
-  ('column_type -> STRING','column_type',1,'p_column_type','parse.py',97),
-  ('insert_statement -> INSERT INTO IDENTIFIER LPAREN insert_column_names RPAREN VALUES insert_column_values','insert_statement',8,'p_insert_statement','parse.py',102),
-  ('insert_column_names -> IDENTIFIER COMMA insert_column_names','insert_column_names',3,'p_insert_column_names','parse.py',109),
-  ('insert_column_names -> IDENTIFIER','insert_column_names',1,'p_insert_column_names','parse.py',110),
-  ('insert_column_values -> LPAREN insert_values RPAREN COMMA insert_column_values','insert_column_values',5,'p_insert_column_values','parse.py',118),
-  ('insert_column_values -> LPAREN insert_values RPAREN','insert_column_values',3,'p_insert_column_values','parse.py',119),
-  ('insert_values -> number_or_string COMMA insert_values','insert_values',3,'p_insert_values','parse.py',128),
-  ('insert_values -> number_or_string','insert_values',1,'p_insert_values','parse.py',129),
-  ('number_or_string -> STRING','number_or_string',1,'p_number_or_string','parse.py',137),
-  ('number_or_string -> NUMBER','number_or_string',1,'p_number_or_string','parse.py',138),
+  ('where_clause -> where_item','where_clause',1,'p_where_clause','parse.py',32),
+  ('where_clause -> where_item and_or where_clause','where_clause',3,'p_where_clause','parse.py',33),
+  ('where_clause -> LPAREN where_clause RPAREN','where_clause',3,'p_where_clause','parse.py',34),
+  ('where_clause -> LPAREN where_clause RPAREN and_or where_clause','where_clause',5,'p_where_clause','parse.py',35),
+  ('and_or -> AND','and_or',1,'p_and_or','parse.py',46),
+  ('and_or -> OR','and_or',1,'p_and_or','parse.py',47),
+  ('where_item -> IDENTIFIER EQUALS number_or_string','where_item',3,'p_where_item','parse.py',52),
+  ('select_columns -> STAR COMMA select_columns','select_columns',3,'p_select_columns','parse.py',56),
+  ('select_columns -> STAR','select_columns',1,'p_select_columns','parse.py',57),
+  ('select_columns -> IDENTIFIER COMMA select_columns','select_columns',3,'p_select_columns','parse.py',58),
+  ('select_columns -> IDENTIFIER','select_columns',1,'p_select_columns','parse.py',59),
+  ('create_schema -> CREATE SCHEMA IDENTIFIER','create_schema',3,'p_create_schema','parse.py',67),
+  ('create_table -> CREATE TABLE IDENTIFIER LPAREN create_table_columns RPAREN','create_table',6,'p_create_table','parse.py',74),
+  ('create_table_columns -> table_column_definition COMMA create_table_columns','create_table_columns',3,'p_create_table_columns','parse.py',90),
+  ('create_table_columns -> table_column_definition','create_table_columns',1,'p_create_table_columns','parse.py',91),
+  ('table_column_definition -> IDENTIFIER column_type','table_column_definition',2,'p_table_column_definition','parse.py',99),
+  ('table_column_definition -> IDENTIFIER column_type PRIMARY KEY','table_column_definition',4,'p_table_column_definition','parse.py',100),
+  ('column_type -> INT','column_type',1,'p_column_type','parse.py',108),
+  ('column_type -> STRING','column_type',1,'p_column_type','parse.py',109),
+  ('insert_statement -> INSERT INTO IDENTIFIER LPAREN insert_column_names RPAREN VALUES insert_column_values','insert_statement',8,'p_insert_statement','parse.py',114),
+  ('insert_column_names -> IDENTIFIER COMMA insert_column_names','insert_column_names',3,'p_insert_column_names','parse.py',121),
+  ('insert_column_names -> IDENTIFIER','insert_column_names',1,'p_insert_column_names','parse.py',122),
+  ('insert_column_values -> LPAREN insert_values RPAREN COMMA insert_column_values','insert_column_values',5,'p_insert_column_values','parse.py',130),
+  ('insert_column_values -> LPAREN insert_values RPAREN','insert_column_values',3,'p_insert_column_values','parse.py',131),
+  ('insert_values -> number_or_string COMMA insert_values','insert_values',3,'p_insert_values','parse.py',140),
+  ('insert_values -> number_or_string','insert_values',1,'p_insert_values','parse.py',141),
+  ('number_or_string -> STRING','number_or_string',1,'p_number_or_string','parse.py',149),
+  ('number_or_string -> NUMBER','number_or_string',1,'p_number_or_string','parse.py',150),
 ]

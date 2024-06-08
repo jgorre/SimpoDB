@@ -10,74 +10,78 @@ Rule 4     sql_statement -> insert_statement
 Rule 5     query -> SELECT select_columns FROM IDENTIFIER
 Rule 6     query -> SELECT select_columns FROM IDENTIFIER WHERE where_clause
 Rule 7     where_clause -> where_item
-Rule 8     where_clause -> where_item AND where_clause
-Rule 9     where_clause -> where_item OR where_clause
-Rule 10    where_item -> IDENTIFIER EQUALS number_or_string
-Rule 11    select_columns -> STAR COMMA select_columns
-Rule 12    select_columns -> STAR
-Rule 13    select_columns -> IDENTIFIER COMMA select_columns
-Rule 14    select_columns -> IDENTIFIER
-Rule 15    create_schema -> CREATE SCHEMA IDENTIFIER
-Rule 16    create_table -> CREATE TABLE IDENTIFIER LPAREN create_table_columns RPAREN
-Rule 17    create_table_columns -> table_column_definition COMMA create_table_columns
-Rule 18    create_table_columns -> table_column_definition
-Rule 19    table_column_definition -> IDENTIFIER column_type
-Rule 20    table_column_definition -> IDENTIFIER column_type PRIMARY KEY
-Rule 21    column_type -> INT
-Rule 22    column_type -> STRING
-Rule 23    insert_statement -> INSERT INTO IDENTIFIER LPAREN insert_column_names RPAREN VALUES insert_column_values
-Rule 24    insert_column_names -> IDENTIFIER COMMA insert_column_names
-Rule 25    insert_column_names -> IDENTIFIER
-Rule 26    insert_column_values -> LPAREN insert_values RPAREN COMMA insert_column_values
-Rule 27    insert_column_values -> LPAREN insert_values RPAREN
-Rule 28    insert_values -> number_or_string COMMA insert_values
-Rule 29    insert_values -> number_or_string
-Rule 30    number_or_string -> STRING
-Rule 31    number_or_string -> NUMBER
+Rule 8     where_clause -> where_item and_or where_clause
+Rule 9     where_clause -> LPAREN where_clause RPAREN
+Rule 10    where_clause -> LPAREN where_clause RPAREN and_or where_clause
+Rule 11    and_or -> AND
+Rule 12    and_or -> OR
+Rule 13    where_item -> IDENTIFIER EQUALS number_or_string
+Rule 14    select_columns -> STAR COMMA select_columns
+Rule 15    select_columns -> STAR
+Rule 16    select_columns -> IDENTIFIER COMMA select_columns
+Rule 17    select_columns -> IDENTIFIER
+Rule 18    create_schema -> CREATE SCHEMA IDENTIFIER
+Rule 19    create_table -> CREATE TABLE IDENTIFIER LPAREN create_table_columns RPAREN
+Rule 20    create_table_columns -> table_column_definition COMMA create_table_columns
+Rule 21    create_table_columns -> table_column_definition
+Rule 22    table_column_definition -> IDENTIFIER column_type
+Rule 23    table_column_definition -> IDENTIFIER column_type PRIMARY KEY
+Rule 24    column_type -> INT
+Rule 25    column_type -> STRING
+Rule 26    insert_statement -> INSERT INTO IDENTIFIER LPAREN insert_column_names RPAREN VALUES insert_column_values
+Rule 27    insert_column_names -> IDENTIFIER COMMA insert_column_names
+Rule 28    insert_column_names -> IDENTIFIER
+Rule 29    insert_column_values -> LPAREN insert_values RPAREN COMMA insert_column_values
+Rule 30    insert_column_values -> LPAREN insert_values RPAREN
+Rule 31    insert_values -> number_or_string COMMA insert_values
+Rule 32    insert_values -> number_or_string
+Rule 33    number_or_string -> STRING
+Rule 34    number_or_string -> NUMBER
 
 Terminals, with rules where they appear
 
-AND                  : 8
-COMMA                : 11 13 17 24 26 28
-CREATE               : 15 16
-EQUALS               : 10
+AND                  : 11
+COMMA                : 14 16 20 27 29 31
+CREATE               : 18 19
+EQUALS               : 13
 FROM                 : 5 6
-IDENTIFIER           : 5 6 10 13 14 15 16 19 20 23 24 25
-INSERT               : 23
-INT                  : 21
-INTO                 : 23
-KEY                  : 20
-LPAREN               : 16 23 26 27
-NUMBER               : 31
-OR                   : 9
-PRIMARY              : 20
-RPAREN               : 16 23 26 27
-SCHEMA               : 15
+IDENTIFIER           : 5 6 13 16 17 18 19 22 23 26 27 28
+INSERT               : 26
+INT                  : 24
+INTO                 : 26
+KEY                  : 23
+LPAREN               : 9 10 19 26 29 30
+NUMBER               : 34
+OR                   : 12
+PRIMARY              : 23
+RPAREN               : 9 10 19 26 29 30
+SCHEMA               : 18
 SELECT               : 5 6
-STAR                 : 11 12
-STRING               : 22 30
-TABLE                : 16
-VALUES               : 23
+STAR                 : 14 15
+STRING               : 25 33
+TABLE                : 19
+VALUES               : 26
 WHERE                : 6
 error                : 
 
 Nonterminals, with rules where they appear
 
-column_type          : 19 20
+and_or               : 8 10
+column_type          : 22 23
 create_schema        : 2
 create_table         : 3
-create_table_columns : 16 17
-insert_column_names  : 23 24
-insert_column_values : 23 26
+create_table_columns : 19 20
+insert_column_names  : 26 27
+insert_column_values : 26 29
 insert_statement     : 4
-insert_values        : 26 27 28
-number_or_string     : 10 28 29
+insert_values        : 29 30 31
+number_or_string     : 13 31 32
 query                : 1
-select_columns       : 5 6 11 13
+select_columns       : 5 6 14 16
 sql_statement        : 0
-table_column_definition : 17 18
-where_clause         : 6 8 9
-where_item           : 7 8 9
+table_column_definition : 20 21
+where_clause         : 6 8 9 10 10
+where_item           : 7 8
 
 Parsing method: LALR
 
@@ -90,9 +94,9 @@ state 0
     (4) sql_statement -> . insert_statement
     (5) query -> . SELECT select_columns FROM IDENTIFIER
     (6) query -> . SELECT select_columns FROM IDENTIFIER WHERE where_clause
-    (15) create_schema -> . CREATE SCHEMA IDENTIFIER
-    (16) create_table -> . CREATE TABLE IDENTIFIER LPAREN create_table_columns RPAREN
-    (23) insert_statement -> . INSERT INTO IDENTIFIER LPAREN insert_column_names RPAREN VALUES insert_column_values
+    (18) create_schema -> . CREATE SCHEMA IDENTIFIER
+    (19) create_table -> . CREATE TABLE IDENTIFIER LPAREN create_table_columns RPAREN
+    (26) insert_statement -> . INSERT INTO IDENTIFIER LPAREN insert_column_names RPAREN VALUES insert_column_values
 
     SELECT          shift and go to state 6
     CREATE          shift and go to state 7
@@ -142,10 +146,10 @@ state 6
 
     (5) query -> SELECT . select_columns FROM IDENTIFIER
     (6) query -> SELECT . select_columns FROM IDENTIFIER WHERE where_clause
-    (11) select_columns -> . STAR COMMA select_columns
-    (12) select_columns -> . STAR
-    (13) select_columns -> . IDENTIFIER COMMA select_columns
-    (14) select_columns -> . IDENTIFIER
+    (14) select_columns -> . STAR COMMA select_columns
+    (15) select_columns -> . STAR
+    (16) select_columns -> . IDENTIFIER COMMA select_columns
+    (17) select_columns -> . IDENTIFIER
 
     STAR            shift and go to state 11
     IDENTIFIER      shift and go to state 10
@@ -154,8 +158,8 @@ state 6
 
 state 7
 
-    (15) create_schema -> CREATE . SCHEMA IDENTIFIER
-    (16) create_table -> CREATE . TABLE IDENTIFIER LPAREN create_table_columns RPAREN
+    (18) create_schema -> CREATE . SCHEMA IDENTIFIER
+    (19) create_table -> CREATE . TABLE IDENTIFIER LPAREN create_table_columns RPAREN
 
     SCHEMA          shift and go to state 12
     TABLE           shift and go to state 13
@@ -163,7 +167,7 @@ state 7
 
 state 8
 
-    (23) insert_statement -> INSERT . INTO IDENTIFIER LPAREN insert_column_names RPAREN VALUES insert_column_values
+    (26) insert_statement -> INSERT . INTO IDENTIFIER LPAREN insert_column_names RPAREN VALUES insert_column_values
 
     INTO            shift and go to state 14
 
@@ -178,39 +182,39 @@ state 9
 
 state 10
 
-    (13) select_columns -> IDENTIFIER . COMMA select_columns
-    (14) select_columns -> IDENTIFIER .
+    (16) select_columns -> IDENTIFIER . COMMA select_columns
+    (17) select_columns -> IDENTIFIER .
 
     COMMA           shift and go to state 16
-    FROM            reduce using rule 14 (select_columns -> IDENTIFIER .)
+    FROM            reduce using rule 17 (select_columns -> IDENTIFIER .)
 
 
 state 11
 
-    (11) select_columns -> STAR . COMMA select_columns
-    (12) select_columns -> STAR .
+    (14) select_columns -> STAR . COMMA select_columns
+    (15) select_columns -> STAR .
 
     COMMA           shift and go to state 17
-    FROM            reduce using rule 12 (select_columns -> STAR .)
+    FROM            reduce using rule 15 (select_columns -> STAR .)
 
 
 state 12
 
-    (15) create_schema -> CREATE SCHEMA . IDENTIFIER
+    (18) create_schema -> CREATE SCHEMA . IDENTIFIER
 
     IDENTIFIER      shift and go to state 18
 
 
 state 13
 
-    (16) create_table -> CREATE TABLE . IDENTIFIER LPAREN create_table_columns RPAREN
+    (19) create_table -> CREATE TABLE . IDENTIFIER LPAREN create_table_columns RPAREN
 
     IDENTIFIER      shift and go to state 19
 
 
 state 14
 
-    (23) insert_statement -> INSERT INTO . IDENTIFIER LPAREN insert_column_names RPAREN VALUES insert_column_values
+    (26) insert_statement -> INSERT INTO . IDENTIFIER LPAREN insert_column_names RPAREN VALUES insert_column_values
 
     IDENTIFIER      shift and go to state 20
 
@@ -225,11 +229,11 @@ state 15
 
 state 16
 
-    (13) select_columns -> IDENTIFIER COMMA . select_columns
-    (11) select_columns -> . STAR COMMA select_columns
-    (12) select_columns -> . STAR
-    (13) select_columns -> . IDENTIFIER COMMA select_columns
-    (14) select_columns -> . IDENTIFIER
+    (16) select_columns -> IDENTIFIER COMMA . select_columns
+    (14) select_columns -> . STAR COMMA select_columns
+    (15) select_columns -> . STAR
+    (16) select_columns -> . IDENTIFIER COMMA select_columns
+    (17) select_columns -> . IDENTIFIER
 
     STAR            shift and go to state 11
     IDENTIFIER      shift and go to state 10
@@ -238,11 +242,11 @@ state 16
 
 state 17
 
-    (11) select_columns -> STAR COMMA . select_columns
-    (11) select_columns -> . STAR COMMA select_columns
-    (12) select_columns -> . STAR
-    (13) select_columns -> . IDENTIFIER COMMA select_columns
-    (14) select_columns -> . IDENTIFIER
+    (14) select_columns -> STAR COMMA . select_columns
+    (14) select_columns -> . STAR COMMA select_columns
+    (15) select_columns -> . STAR
+    (16) select_columns -> . IDENTIFIER COMMA select_columns
+    (17) select_columns -> . IDENTIFIER
 
     STAR            shift and go to state 11
     IDENTIFIER      shift and go to state 10
@@ -251,21 +255,21 @@ state 17
 
 state 18
 
-    (15) create_schema -> CREATE SCHEMA IDENTIFIER .
+    (18) create_schema -> CREATE SCHEMA IDENTIFIER .
 
-    $end            reduce using rule 15 (create_schema -> CREATE SCHEMA IDENTIFIER .)
+    $end            reduce using rule 18 (create_schema -> CREATE SCHEMA IDENTIFIER .)
 
 
 state 19
 
-    (16) create_table -> CREATE TABLE IDENTIFIER . LPAREN create_table_columns RPAREN
+    (19) create_table -> CREATE TABLE IDENTIFIER . LPAREN create_table_columns RPAREN
 
     LPAREN          shift and go to state 24
 
 
 state 20
 
-    (23) insert_statement -> INSERT INTO IDENTIFIER . LPAREN insert_column_names RPAREN VALUES insert_column_values
+    (26) insert_statement -> INSERT INTO IDENTIFIER . LPAREN insert_column_names RPAREN VALUES insert_column_values
 
     LPAREN          shift and go to state 25
 
@@ -281,25 +285,25 @@ state 21
 
 state 22
 
-    (13) select_columns -> IDENTIFIER COMMA select_columns .
+    (16) select_columns -> IDENTIFIER COMMA select_columns .
 
-    FROM            reduce using rule 13 (select_columns -> IDENTIFIER COMMA select_columns .)
+    FROM            reduce using rule 16 (select_columns -> IDENTIFIER COMMA select_columns .)
 
 
 state 23
 
-    (11) select_columns -> STAR COMMA select_columns .
+    (14) select_columns -> STAR COMMA select_columns .
 
-    FROM            reduce using rule 11 (select_columns -> STAR COMMA select_columns .)
+    FROM            reduce using rule 14 (select_columns -> STAR COMMA select_columns .)
 
 
 state 24
 
-    (16) create_table -> CREATE TABLE IDENTIFIER LPAREN . create_table_columns RPAREN
-    (17) create_table_columns -> . table_column_definition COMMA create_table_columns
-    (18) create_table_columns -> . table_column_definition
-    (19) table_column_definition -> . IDENTIFIER column_type
-    (20) table_column_definition -> . IDENTIFIER column_type PRIMARY KEY
+    (19) create_table -> CREATE TABLE IDENTIFIER LPAREN . create_table_columns RPAREN
+    (20) create_table_columns -> . table_column_definition COMMA create_table_columns
+    (21) create_table_columns -> . table_column_definition
+    (22) table_column_definition -> . IDENTIFIER column_type
+    (23) table_column_definition -> . IDENTIFIER column_type PRIMARY KEY
 
     IDENTIFIER      shift and go to state 27
 
@@ -308,9 +312,9 @@ state 24
 
 state 25
 
-    (23) insert_statement -> INSERT INTO IDENTIFIER LPAREN . insert_column_names RPAREN VALUES insert_column_values
-    (24) insert_column_names -> . IDENTIFIER COMMA insert_column_names
-    (25) insert_column_names -> . IDENTIFIER
+    (26) insert_statement -> INSERT INTO IDENTIFIER LPAREN . insert_column_names RPAREN VALUES insert_column_values
+    (27) insert_column_names -> . IDENTIFIER COMMA insert_column_names
+    (28) insert_column_names -> . IDENTIFIER
 
     IDENTIFIER      shift and go to state 30
 
@@ -320,10 +324,12 @@ state 26
 
     (6) query -> SELECT select_columns FROM IDENTIFIER WHERE . where_clause
     (7) where_clause -> . where_item
-    (8) where_clause -> . where_item AND where_clause
-    (9) where_clause -> . where_item OR where_clause
-    (10) where_item -> . IDENTIFIER EQUALS number_or_string
+    (8) where_clause -> . where_item and_or where_clause
+    (9) where_clause -> . LPAREN where_clause RPAREN
+    (10) where_clause -> . LPAREN where_clause RPAREN and_or where_clause
+    (13) where_item -> . IDENTIFIER EQUALS number_or_string
 
+    LPAREN          shift and go to state 35
     IDENTIFIER      shift and go to state 32
 
     where_clause                   shift and go to state 33
@@ -331,53 +337,53 @@ state 26
 
 state 27
 
-    (19) table_column_definition -> IDENTIFIER . column_type
-    (20) table_column_definition -> IDENTIFIER . column_type PRIMARY KEY
-    (21) column_type -> . INT
-    (22) column_type -> . STRING
+    (22) table_column_definition -> IDENTIFIER . column_type
+    (23) table_column_definition -> IDENTIFIER . column_type PRIMARY KEY
+    (24) column_type -> . INT
+    (25) column_type -> . STRING
 
-    INT             shift and go to state 36
-    STRING          shift and go to state 37
+    INT             shift and go to state 37
+    STRING          shift and go to state 38
 
-    column_type                    shift and go to state 35
+    column_type                    shift and go to state 36
 
 state 28
 
-    (16) create_table -> CREATE TABLE IDENTIFIER LPAREN create_table_columns . RPAREN
+    (19) create_table -> CREATE TABLE IDENTIFIER LPAREN create_table_columns . RPAREN
 
-    RPAREN          shift and go to state 38
+    RPAREN          shift and go to state 39
 
 
 state 29
 
-    (17) create_table_columns -> table_column_definition . COMMA create_table_columns
-    (18) create_table_columns -> table_column_definition .
+    (20) create_table_columns -> table_column_definition . COMMA create_table_columns
+    (21) create_table_columns -> table_column_definition .
 
-    COMMA           shift and go to state 39
-    RPAREN          reduce using rule 18 (create_table_columns -> table_column_definition .)
+    COMMA           shift and go to state 40
+    RPAREN          reduce using rule 21 (create_table_columns -> table_column_definition .)
 
 
 state 30
 
-    (24) insert_column_names -> IDENTIFIER . COMMA insert_column_names
-    (25) insert_column_names -> IDENTIFIER .
+    (27) insert_column_names -> IDENTIFIER . COMMA insert_column_names
+    (28) insert_column_names -> IDENTIFIER .
 
-    COMMA           shift and go to state 40
-    RPAREN          reduce using rule 25 (insert_column_names -> IDENTIFIER .)
+    COMMA           shift and go to state 41
+    RPAREN          reduce using rule 28 (insert_column_names -> IDENTIFIER .)
 
 
 state 31
 
-    (23) insert_statement -> INSERT INTO IDENTIFIER LPAREN insert_column_names . RPAREN VALUES insert_column_values
+    (26) insert_statement -> INSERT INTO IDENTIFIER LPAREN insert_column_names . RPAREN VALUES insert_column_values
 
-    RPAREN          shift and go to state 41
+    RPAREN          shift and go to state 42
 
 
 state 32
 
-    (10) where_item -> IDENTIFIER . EQUALS number_or_string
+    (13) where_item -> IDENTIFIER . EQUALS number_or_string
 
-    EQUALS          shift and go to state 42
+    EQUALS          shift and go to state 43
 
 
 state 33
@@ -390,282 +396,346 @@ state 33
 state 34
 
     (7) where_clause -> where_item .
-    (8) where_clause -> where_item . AND where_clause
-    (9) where_clause -> where_item . OR where_clause
+    (8) where_clause -> where_item . and_or where_clause
+    (11) and_or -> . AND
+    (12) and_or -> . OR
 
     $end            reduce using rule 7 (where_clause -> where_item .)
-    AND             shift and go to state 43
-    OR              shift and go to state 44
+    RPAREN          reduce using rule 7 (where_clause -> where_item .)
+    AND             shift and go to state 45
+    OR              shift and go to state 46
 
+    and_or                         shift and go to state 44
 
 state 35
 
-    (19) table_column_definition -> IDENTIFIER column_type .
-    (20) table_column_definition -> IDENTIFIER column_type . PRIMARY KEY
+    (9) where_clause -> LPAREN . where_clause RPAREN
+    (10) where_clause -> LPAREN . where_clause RPAREN and_or where_clause
+    (7) where_clause -> . where_item
+    (8) where_clause -> . where_item and_or where_clause
+    (9) where_clause -> . LPAREN where_clause RPAREN
+    (10) where_clause -> . LPAREN where_clause RPAREN and_or where_clause
+    (13) where_item -> . IDENTIFIER EQUALS number_or_string
 
-    COMMA           reduce using rule 19 (table_column_definition -> IDENTIFIER column_type .)
-    RPAREN          reduce using rule 19 (table_column_definition -> IDENTIFIER column_type .)
-    PRIMARY         shift and go to state 45
+    LPAREN          shift and go to state 35
+    IDENTIFIER      shift and go to state 32
 
+    where_clause                   shift and go to state 47
+    where_item                     shift and go to state 34
 
 state 36
 
-    (21) column_type -> INT .
+    (22) table_column_definition -> IDENTIFIER column_type .
+    (23) table_column_definition -> IDENTIFIER column_type . PRIMARY KEY
 
-    PRIMARY         reduce using rule 21 (column_type -> INT .)
-    COMMA           reduce using rule 21 (column_type -> INT .)
-    RPAREN          reduce using rule 21 (column_type -> INT .)
+    COMMA           reduce using rule 22 (table_column_definition -> IDENTIFIER column_type .)
+    RPAREN          reduce using rule 22 (table_column_definition -> IDENTIFIER column_type .)
+    PRIMARY         shift and go to state 48
 
 
 state 37
 
-    (22) column_type -> STRING .
+    (24) column_type -> INT .
 
-    PRIMARY         reduce using rule 22 (column_type -> STRING .)
-    COMMA           reduce using rule 22 (column_type -> STRING .)
-    RPAREN          reduce using rule 22 (column_type -> STRING .)
+    PRIMARY         reduce using rule 24 (column_type -> INT .)
+    COMMA           reduce using rule 24 (column_type -> INT .)
+    RPAREN          reduce using rule 24 (column_type -> INT .)
 
 
 state 38
 
-    (16) create_table -> CREATE TABLE IDENTIFIER LPAREN create_table_columns RPAREN .
+    (25) column_type -> STRING .
 
-    $end            reduce using rule 16 (create_table -> CREATE TABLE IDENTIFIER LPAREN create_table_columns RPAREN .)
+    PRIMARY         reduce using rule 25 (column_type -> STRING .)
+    COMMA           reduce using rule 25 (column_type -> STRING .)
+    RPAREN          reduce using rule 25 (column_type -> STRING .)
 
 
 state 39
 
-    (17) create_table_columns -> table_column_definition COMMA . create_table_columns
-    (17) create_table_columns -> . table_column_definition COMMA create_table_columns
-    (18) create_table_columns -> . table_column_definition
-    (19) table_column_definition -> . IDENTIFIER column_type
-    (20) table_column_definition -> . IDENTIFIER column_type PRIMARY KEY
+    (19) create_table -> CREATE TABLE IDENTIFIER LPAREN create_table_columns RPAREN .
+
+    $end            reduce using rule 19 (create_table -> CREATE TABLE IDENTIFIER LPAREN create_table_columns RPAREN .)
+
+
+state 40
+
+    (20) create_table_columns -> table_column_definition COMMA . create_table_columns
+    (20) create_table_columns -> . table_column_definition COMMA create_table_columns
+    (21) create_table_columns -> . table_column_definition
+    (22) table_column_definition -> . IDENTIFIER column_type
+    (23) table_column_definition -> . IDENTIFIER column_type PRIMARY KEY
 
     IDENTIFIER      shift and go to state 27
 
     table_column_definition        shift and go to state 29
-    create_table_columns           shift and go to state 46
-
-state 40
-
-    (24) insert_column_names -> IDENTIFIER COMMA . insert_column_names
-    (24) insert_column_names -> . IDENTIFIER COMMA insert_column_names
-    (25) insert_column_names -> . IDENTIFIER
-
-    IDENTIFIER      shift and go to state 30
-
-    insert_column_names            shift and go to state 47
+    create_table_columns           shift and go to state 49
 
 state 41
 
-    (23) insert_statement -> INSERT INTO IDENTIFIER LPAREN insert_column_names RPAREN . VALUES insert_column_values
+    (27) insert_column_names -> IDENTIFIER COMMA . insert_column_names
+    (27) insert_column_names -> . IDENTIFIER COMMA insert_column_names
+    (28) insert_column_names -> . IDENTIFIER
 
-    VALUES          shift and go to state 48
+    IDENTIFIER      shift and go to state 30
 
+    insert_column_names            shift and go to state 50
 
 state 42
 
-    (10) where_item -> IDENTIFIER EQUALS . number_or_string
-    (30) number_or_string -> . STRING
-    (31) number_or_string -> . NUMBER
+    (26) insert_statement -> INSERT INTO IDENTIFIER LPAREN insert_column_names RPAREN . VALUES insert_column_values
 
-    STRING          shift and go to state 50
-    NUMBER          shift and go to state 51
+    VALUES          shift and go to state 51
 
-    number_or_string               shift and go to state 49
 
 state 43
 
-    (8) where_clause -> where_item AND . where_clause
-    (7) where_clause -> . where_item
-    (8) where_clause -> . where_item AND where_clause
-    (9) where_clause -> . where_item OR where_clause
-    (10) where_item -> . IDENTIFIER EQUALS number_or_string
+    (13) where_item -> IDENTIFIER EQUALS . number_or_string
+    (33) number_or_string -> . STRING
+    (34) number_or_string -> . NUMBER
 
-    IDENTIFIER      shift and go to state 32
+    STRING          shift and go to state 53
+    NUMBER          shift and go to state 54
 
-    where_item                     shift and go to state 34
-    where_clause                   shift and go to state 52
+    number_or_string               shift and go to state 52
 
 state 44
 
-    (9) where_clause -> where_item OR . where_clause
+    (8) where_clause -> where_item and_or . where_clause
     (7) where_clause -> . where_item
-    (8) where_clause -> . where_item AND where_clause
-    (9) where_clause -> . where_item OR where_clause
-    (10) where_item -> . IDENTIFIER EQUALS number_or_string
+    (8) where_clause -> . where_item and_or where_clause
+    (9) where_clause -> . LPAREN where_clause RPAREN
+    (10) where_clause -> . LPAREN where_clause RPAREN and_or where_clause
+    (13) where_item -> . IDENTIFIER EQUALS number_or_string
 
+    LPAREN          shift and go to state 35
     IDENTIFIER      shift and go to state 32
 
     where_item                     shift and go to state 34
-    where_clause                   shift and go to state 53
+    where_clause                   shift and go to state 55
 
 state 45
 
-    (20) table_column_definition -> IDENTIFIER column_type PRIMARY . KEY
+    (11) and_or -> AND .
 
-    KEY             shift and go to state 54
+    LPAREN          reduce using rule 11 (and_or -> AND .)
+    IDENTIFIER      reduce using rule 11 (and_or -> AND .)
 
 
 state 46
 
-    (17) create_table_columns -> table_column_definition COMMA create_table_columns .
+    (12) and_or -> OR .
 
-    RPAREN          reduce using rule 17 (create_table_columns -> table_column_definition COMMA create_table_columns .)
+    LPAREN          reduce using rule 12 (and_or -> OR .)
+    IDENTIFIER      reduce using rule 12 (and_or -> OR .)
 
 
 state 47
 
-    (24) insert_column_names -> IDENTIFIER COMMA insert_column_names .
+    (9) where_clause -> LPAREN where_clause . RPAREN
+    (10) where_clause -> LPAREN where_clause . RPAREN and_or where_clause
 
-    RPAREN          reduce using rule 24 (insert_column_names -> IDENTIFIER COMMA insert_column_names .)
+    RPAREN          shift and go to state 56
 
 
 state 48
 
-    (23) insert_statement -> INSERT INTO IDENTIFIER LPAREN insert_column_names RPAREN VALUES . insert_column_values
-    (26) insert_column_values -> . LPAREN insert_values RPAREN COMMA insert_column_values
-    (27) insert_column_values -> . LPAREN insert_values RPAREN
+    (23) table_column_definition -> IDENTIFIER column_type PRIMARY . KEY
 
-    LPAREN          shift and go to state 55
+    KEY             shift and go to state 57
 
-    insert_column_values           shift and go to state 56
 
 state 49
 
-    (10) where_item -> IDENTIFIER EQUALS number_or_string .
+    (20) create_table_columns -> table_column_definition COMMA create_table_columns .
 
-    AND             reduce using rule 10 (where_item -> IDENTIFIER EQUALS number_or_string .)
-    OR              reduce using rule 10 (where_item -> IDENTIFIER EQUALS number_or_string .)
-    $end            reduce using rule 10 (where_item -> IDENTIFIER EQUALS number_or_string .)
+    RPAREN          reduce using rule 20 (create_table_columns -> table_column_definition COMMA create_table_columns .)
 
 
 state 50
 
-    (30) number_or_string -> STRING .
+    (27) insert_column_names -> IDENTIFIER COMMA insert_column_names .
 
-    AND             reduce using rule 30 (number_or_string -> STRING .)
-    OR              reduce using rule 30 (number_or_string -> STRING .)
-    $end            reduce using rule 30 (number_or_string -> STRING .)
-    COMMA           reduce using rule 30 (number_or_string -> STRING .)
-    RPAREN          reduce using rule 30 (number_or_string -> STRING .)
+    RPAREN          reduce using rule 27 (insert_column_names -> IDENTIFIER COMMA insert_column_names .)
 
 
 state 51
 
-    (31) number_or_string -> NUMBER .
+    (26) insert_statement -> INSERT INTO IDENTIFIER LPAREN insert_column_names RPAREN VALUES . insert_column_values
+    (29) insert_column_values -> . LPAREN insert_values RPAREN COMMA insert_column_values
+    (30) insert_column_values -> . LPAREN insert_values RPAREN
 
-    AND             reduce using rule 31 (number_or_string -> NUMBER .)
-    OR              reduce using rule 31 (number_or_string -> NUMBER .)
-    $end            reduce using rule 31 (number_or_string -> NUMBER .)
-    COMMA           reduce using rule 31 (number_or_string -> NUMBER .)
-    RPAREN          reduce using rule 31 (number_or_string -> NUMBER .)
+    LPAREN          shift and go to state 58
 
+    insert_column_values           shift and go to state 59
 
 state 52
 
-    (8) where_clause -> where_item AND where_clause .
+    (13) where_item -> IDENTIFIER EQUALS number_or_string .
 
-    $end            reduce using rule 8 (where_clause -> where_item AND where_clause .)
+    AND             reduce using rule 13 (where_item -> IDENTIFIER EQUALS number_or_string .)
+    OR              reduce using rule 13 (where_item -> IDENTIFIER EQUALS number_or_string .)
+    $end            reduce using rule 13 (where_item -> IDENTIFIER EQUALS number_or_string .)
+    RPAREN          reduce using rule 13 (where_item -> IDENTIFIER EQUALS number_or_string .)
 
 
 state 53
 
-    (9) where_clause -> where_item OR where_clause .
+    (33) number_or_string -> STRING .
 
-    $end            reduce using rule 9 (where_clause -> where_item OR where_clause .)
+    AND             reduce using rule 33 (number_or_string -> STRING .)
+    OR              reduce using rule 33 (number_or_string -> STRING .)
+    $end            reduce using rule 33 (number_or_string -> STRING .)
+    RPAREN          reduce using rule 33 (number_or_string -> STRING .)
+    COMMA           reduce using rule 33 (number_or_string -> STRING .)
 
 
 state 54
 
-    (20) table_column_definition -> IDENTIFIER column_type PRIMARY KEY .
+    (34) number_or_string -> NUMBER .
 
-    COMMA           reduce using rule 20 (table_column_definition -> IDENTIFIER column_type PRIMARY KEY .)
-    RPAREN          reduce using rule 20 (table_column_definition -> IDENTIFIER column_type PRIMARY KEY .)
+    AND             reduce using rule 34 (number_or_string -> NUMBER .)
+    OR              reduce using rule 34 (number_or_string -> NUMBER .)
+    $end            reduce using rule 34 (number_or_string -> NUMBER .)
+    RPAREN          reduce using rule 34 (number_or_string -> NUMBER .)
+    COMMA           reduce using rule 34 (number_or_string -> NUMBER .)
 
 
 state 55
 
-    (26) insert_column_values -> LPAREN . insert_values RPAREN COMMA insert_column_values
-    (27) insert_column_values -> LPAREN . insert_values RPAREN
-    (28) insert_values -> . number_or_string COMMA insert_values
-    (29) insert_values -> . number_or_string
-    (30) number_or_string -> . STRING
-    (31) number_or_string -> . NUMBER
+    (8) where_clause -> where_item and_or where_clause .
 
-    STRING          shift and go to state 50
-    NUMBER          shift and go to state 51
+    $end            reduce using rule 8 (where_clause -> where_item and_or where_clause .)
+    RPAREN          reduce using rule 8 (where_clause -> where_item and_or where_clause .)
 
-    insert_values                  shift and go to state 57
-    number_or_string               shift and go to state 58
 
 state 56
 
-    (23) insert_statement -> INSERT INTO IDENTIFIER LPAREN insert_column_names RPAREN VALUES insert_column_values .
+    (9) where_clause -> LPAREN where_clause RPAREN .
+    (10) where_clause -> LPAREN where_clause RPAREN . and_or where_clause
+    (11) and_or -> . AND
+    (12) and_or -> . OR
 
-    $end            reduce using rule 23 (insert_statement -> INSERT INTO IDENTIFIER LPAREN insert_column_names RPAREN VALUES insert_column_values .)
+    $end            reduce using rule 9 (where_clause -> LPAREN where_clause RPAREN .)
+    RPAREN          reduce using rule 9 (where_clause -> LPAREN where_clause RPAREN .)
+    AND             shift and go to state 45
+    OR              shift and go to state 46
 
+    and_or                         shift and go to state 60
 
 state 57
 
-    (26) insert_column_values -> LPAREN insert_values . RPAREN COMMA insert_column_values
-    (27) insert_column_values -> LPAREN insert_values . RPAREN
+    (23) table_column_definition -> IDENTIFIER column_type PRIMARY KEY .
 
-    RPAREN          shift and go to state 59
+    COMMA           reduce using rule 23 (table_column_definition -> IDENTIFIER column_type PRIMARY KEY .)
+    RPAREN          reduce using rule 23 (table_column_definition -> IDENTIFIER column_type PRIMARY KEY .)
 
 
 state 58
 
-    (28) insert_values -> number_or_string . COMMA insert_values
-    (29) insert_values -> number_or_string .
+    (29) insert_column_values -> LPAREN . insert_values RPAREN COMMA insert_column_values
+    (30) insert_column_values -> LPAREN . insert_values RPAREN
+    (31) insert_values -> . number_or_string COMMA insert_values
+    (32) insert_values -> . number_or_string
+    (33) number_or_string -> . STRING
+    (34) number_or_string -> . NUMBER
 
-    COMMA           shift and go to state 60
-    RPAREN          reduce using rule 29 (insert_values -> number_or_string .)
+    STRING          shift and go to state 53
+    NUMBER          shift and go to state 54
 
+    insert_values                  shift and go to state 61
+    number_or_string               shift and go to state 62
 
 state 59
 
-    (26) insert_column_values -> LPAREN insert_values RPAREN . COMMA insert_column_values
-    (27) insert_column_values -> LPAREN insert_values RPAREN .
+    (26) insert_statement -> INSERT INTO IDENTIFIER LPAREN insert_column_names RPAREN VALUES insert_column_values .
 
-    COMMA           shift and go to state 61
-    $end            reduce using rule 27 (insert_column_values -> LPAREN insert_values RPAREN .)
+    $end            reduce using rule 26 (insert_statement -> INSERT INTO IDENTIFIER LPAREN insert_column_names RPAREN VALUES insert_column_values .)
 
 
 state 60
 
-    (28) insert_values -> number_or_string COMMA . insert_values
-    (28) insert_values -> . number_or_string COMMA insert_values
-    (29) insert_values -> . number_or_string
-    (30) number_or_string -> . STRING
-    (31) number_or_string -> . NUMBER
+    (10) where_clause -> LPAREN where_clause RPAREN and_or . where_clause
+    (7) where_clause -> . where_item
+    (8) where_clause -> . where_item and_or where_clause
+    (9) where_clause -> . LPAREN where_clause RPAREN
+    (10) where_clause -> . LPAREN where_clause RPAREN and_or where_clause
+    (13) where_item -> . IDENTIFIER EQUALS number_or_string
 
-    STRING          shift and go to state 50
-    NUMBER          shift and go to state 51
+    LPAREN          shift and go to state 35
+    IDENTIFIER      shift and go to state 32
 
-    number_or_string               shift and go to state 58
-    insert_values                  shift and go to state 62
+    where_clause                   shift and go to state 63
+    where_item                     shift and go to state 34
 
 state 61
 
-    (26) insert_column_values -> LPAREN insert_values RPAREN COMMA . insert_column_values
-    (26) insert_column_values -> . LPAREN insert_values RPAREN COMMA insert_column_values
-    (27) insert_column_values -> . LPAREN insert_values RPAREN
+    (29) insert_column_values -> LPAREN insert_values . RPAREN COMMA insert_column_values
+    (30) insert_column_values -> LPAREN insert_values . RPAREN
 
-    LPAREN          shift and go to state 55
+    RPAREN          shift and go to state 64
 
-    insert_column_values           shift and go to state 63
 
 state 62
 
-    (28) insert_values -> number_or_string COMMA insert_values .
+    (31) insert_values -> number_or_string . COMMA insert_values
+    (32) insert_values -> number_or_string .
 
-    RPAREN          reduce using rule 28 (insert_values -> number_or_string COMMA insert_values .)
+    COMMA           shift and go to state 65
+    RPAREN          reduce using rule 32 (insert_values -> number_or_string .)
 
 
 state 63
 
-    (26) insert_column_values -> LPAREN insert_values RPAREN COMMA insert_column_values .
+    (10) where_clause -> LPAREN where_clause RPAREN and_or where_clause .
 
-    $end            reduce using rule 26 (insert_column_values -> LPAREN insert_values RPAREN COMMA insert_column_values .)
+    $end            reduce using rule 10 (where_clause -> LPAREN where_clause RPAREN and_or where_clause .)
+    RPAREN          reduce using rule 10 (where_clause -> LPAREN where_clause RPAREN and_or where_clause .)
+
+
+state 64
+
+    (29) insert_column_values -> LPAREN insert_values RPAREN . COMMA insert_column_values
+    (30) insert_column_values -> LPAREN insert_values RPAREN .
+
+    COMMA           shift and go to state 66
+    $end            reduce using rule 30 (insert_column_values -> LPAREN insert_values RPAREN .)
+
+
+state 65
+
+    (31) insert_values -> number_or_string COMMA . insert_values
+    (31) insert_values -> . number_or_string COMMA insert_values
+    (32) insert_values -> . number_or_string
+    (33) number_or_string -> . STRING
+    (34) number_or_string -> . NUMBER
+
+    STRING          shift and go to state 53
+    NUMBER          shift and go to state 54
+
+    number_or_string               shift and go to state 62
+    insert_values                  shift and go to state 67
+
+state 66
+
+    (29) insert_column_values -> LPAREN insert_values RPAREN COMMA . insert_column_values
+    (29) insert_column_values -> . LPAREN insert_values RPAREN COMMA insert_column_values
+    (30) insert_column_values -> . LPAREN insert_values RPAREN
+
+    LPAREN          shift and go to state 58
+
+    insert_column_values           shift and go to state 68
+
+state 67
+
+    (31) insert_values -> number_or_string COMMA insert_values .
+
+    RPAREN          reduce using rule 31 (insert_values -> number_or_string COMMA insert_values .)
+
+
+state 68
+
+    (29) insert_column_values -> LPAREN insert_values RPAREN COMMA insert_column_values .
+
+    $end            reduce using rule 29 (insert_column_values -> LPAREN insert_values RPAREN COMMA insert_column_values .)
 

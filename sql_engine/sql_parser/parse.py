@@ -20,21 +20,47 @@ def p_query(p):
              | SELECT select_columns FROM IDENTIFIER WHERE where_clause'''    
     columns = p[2]
     table = p[4]
-    where_condition = None
+    where_statement = None
 
     if len(p) == 7:
-        where_condition = p[6]
+        where_statement = p[6]
 
-    p[0] = SelectCommand(columns, table, where_condition)
+    p[0] = SelectCommand(columns, table, where_statement)
 
 def p_where_clause(p):
     '''where_clause : where_item
-                    | where_item AND where_clause
-                    | where_item OR where_clause'''
-    if len(p) == 4:
-        p[0] = [p[1], p[2]] + p[3]
+                    | where_item and_or where_clause
+                    | LPAREN where_clause RPAREN
+                    | LPAREN where_clause RPAREN and_or where_clause'''
+    
+    if len(p) == 6:
+        lparen = p[1]
+        clause1 = p[2]
+        rparen = p[3]
+        and_or = p[4]
+        clause2 = p[5]
+
+        p[0] = [lparen] + clause1 + [rparen, and_or] + clause2
+    elif len(p) == 4:
+        if p[1] == '(' and p[3] == ')':
+            lparen = p[1]
+            clause = p[2]
+            rparen = p[3]
+            p[0] = [lparen] + clause + [rparen]
+        else:
+            condition = p[1]
+            and_or = p[2]
+            next_clause = p[3]
+            p[0] = [condition, and_or] + next_clause
     else:
-        p[0] = [p[1]]
+        condition = p[1]
+        p[0] = [condition]
+
+def p_and_or(p):
+    '''and_or : AND
+              | OR'''
+    
+    p[0] = p[1]
 
 def p_where_item(p):
     '''where_item : IDENTIFIER EQUALS number_or_string'''
