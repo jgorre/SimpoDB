@@ -10,6 +10,21 @@ from sql_engine.config.config import Config
 def reset_config():
     Config._instance = None
 
+def prepare_pups_table(database_engine):
+    create_table_statement = 'create table pups (name string primary key, age int, favorite_activity string)'
+    database_engine.process_command(create_table_statement)
+
+    pups = [
+        "('luna', 6, 'barking and finding a cozy place to sleep')",
+        "('baby', 25, 'eating')",
+        "('cleo', 22, 'playing with toys')",
+        "('ginger', 15, 'cuddling')"
+    ]
+
+    for pup in pups:
+        insert_statement = f'insert into pups (name, age, favorite_activity) values {pup}'
+        database_engine.process_command(insert_statement)
+
 @pytest.fixture(scope="function")
 def database_engine():
     reset_config()
@@ -24,20 +39,9 @@ def database_engine():
 
     shutil.rmtree('./test')
 
+
 def test_small_table(database_engine):
-    create_table_statement = 'create table pups (name string primary key, age int, favorite_activity string)'
-    result = database_engine.process_command(create_table_statement)
-
-    pups = [
-        "('luna', 6, 'barking and finding a cozy place to sleep')",
-        "('baby', 25, 'eating')",
-        "('cleo', 22, 'playing with toys')",
-        "('ginger', 15, 'cuddling')"
-    ]
-
-    for pup in pups:
-        insert_statement = f'insert into pups (name, age, favorite_activity) values {pup}'
-        database_engine.process_command(insert_statement)
+    prepare_pups_table(database_engine)
 
     luna_query = "select * from pups where name = 'luna'"
     luna_query_result = database_engine.process_command(luna_query)
@@ -58,23 +62,9 @@ def test_large_table(database_engine):
         insert_statement = f"insert into items (id, str) values ({i}, '{random_string}')"
         database_engine.process_command(insert_statement)
 
-    query = "select * from items where id = 5"
+    query = "select id from items where id = 5"
     result = database_engine.process_command(query)
-    assert result
-
-
-def test_tmp(database_engine):
-    create_table_statement = 'create table pickles (id int primary key, str string)'
-    database_engine.process_command(create_table_statement)
-
-    for i in range(0, 100):
-        random_string = ''.join(random.sample('abcdefghijklmnopqrstuvwxyz0123456789', 10))
-        insert_statement = f"insert into pickles (id, str) values ({i}, '{random_string}')"
-        database_engine.process_command(insert_statement)
-
-    query = "select * from pickles"
-    result = database_engine.process_command(query)
-    assert result
+    assert result[0] == { 'id': 5 }
 
 
 def test_read_all_contains_only_latest_writes_per_key(database_engine):
@@ -106,3 +96,31 @@ def test_read_all_contains_only_latest_writes_per_key(database_engine):
     bad_vals = [val for val in result if val['recency'] != 'latest']
 
     assert len(bad_vals) == 0
+
+
+def test_simple_non_index_where_conditions(database_engine):
+    prepare_pups_table(database_engine)
+
+    query = 'select * from pups where age = 22'
+    res = database_engine.process_command(query)
+    assert res == [{ 'name': 'cleo', 'age': 22, 'favorite_activity': 'playing with toys' }]
+
+    query = "select * from pups where favorite_activity = 'cuddling'"
+    res = database_engine.process_command(query)
+    assert res == [{ 'name': 'ginger', 'age': 15, 'favorite_activity': 'cuddling' }]
+
+    query = "select * from pups where favorite_activity = 'cuddling' or age = 6"
+    res = database_engine.process_command(query)
+    assert res == [
+        { 'name': 'ginger', 'age': 15, 'favorite_activity': 'cuddling' },
+        {'name': 'luna', 'age': 6, 'favorite_activity': 'barking and finding a cozy place to sleep'}
+    ]
+
+
+def test_indexed_where_conditions(database_engine):
+    prepare_pups_table(database_engine)
+
+    query = "select * from pups where name = 'cleo'"
+    res = database_engine.process_command(query)
+    assert res == [{ 'name': 'cleo', 'age': 22, 'favorite_activity': 'playing with toys' }]
+    
