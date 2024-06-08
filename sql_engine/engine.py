@@ -4,7 +4,6 @@ from .storage.storage import TableStorage
 from .config.config import Config
 
 
-
 def handle_sql_command(sql: SqlCommand):
     return sql.execute()
 
@@ -25,7 +24,7 @@ def run():
 class DatabaseEngine:
     def __init__(self, config) -> None:
         # Fix this hackiness
-        Config().initialize(config)
+        Config().initialize_with(config)
         db_config = Config()
         if not db_config.data_path.exists():
             db_config.data_path.mkdir(parents=True)

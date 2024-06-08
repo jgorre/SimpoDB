@@ -63,8 +63,18 @@ def p_and_or(p):
     p[0] = p[1]
 
 def p_where_item(p):
-    '''where_item : IDENTIFIER EQUALS number_or_string'''
-    p[0] = (p[1], p[3].strip("'"))
+    '''where_item : IDENTIFIER where_item_operator number_or_string'''
+    p[0] = (p[1], p[2], p[3].strip("'"))
+
+def p_where_item_operator(p):
+    '''where_item_operator : EQUALS
+                           | NOT_EQUALS
+                           | GREATER_THAN
+                           | GREATER_THAN_OR_EQUAL
+                           | LESS_THAN
+                           | LESS_THAN_OR_EQUAL'''
+    
+    p[0] = p[1]
 
 def p_select_columns(p):
     '''select_columns : STAR COMMA select_columns
@@ -171,5 +181,4 @@ def p_error(p):
     else:
         print("Syntax error at EOF")
 
-# Build the parser
 parser = yacc.yacc()

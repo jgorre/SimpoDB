@@ -27,7 +27,12 @@ tokens = [
    'NUMBER',
    'LPAREN',
    'RPAREN',
-   'EQUALS'
+   'EQUALS',
+   'NOT_EQUALS',   
+   'GREATER_THAN',
+   'GREATER_THAN_OR_EQUAL',
+   'LESS_THAN',
+   'LESS_THAN_OR_EQUAL',   
 ] + reserved_keywords
 
 # Regular expression rules for simple tokens
@@ -36,6 +41,11 @@ t_COMMA  = r','
 t_LPAREN = r'\('
 t_RPAREN = r'\)'
 t_EQUALS = r'='
+t_NOT_EQUALS = r'!='
+t_GREATER_THAN = r'>'
+t_GREATER_THAN_OR_EQUAL = r'>='
+t_LESS_THAN = r'<'
+t_LESS_THAN_OR_EQUAL = r'<='
 
 # A rule for identifiers and reserved words
 def t_IDENTIFIER(t):
@@ -61,15 +71,4 @@ t_ignore = ' \t'
 def t_error(t):
     print("Illegal character '%s'" % t.value[0])
 
-# Build the lexer
 lexer = lex.lex()
-
-# # Get user input
-# user_input = input("Enter a SQL statement: ")
-
-# # Lexical analysis
-# lexer.input(user_input)
-
-# # Iterate over tokens and print them
-# for token in lexer:
-#     print(token)

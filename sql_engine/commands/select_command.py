@@ -1,7 +1,10 @@
+import operator
+from sympy.parsing.sympy_parser import parse_expr
+
 from .sql_command import SqlCommand
 from ..storage.storage import TableStorage
 from ..data_serialization.schema import SchemaManager
-from sympy.parsing.sympy_parser import parse_expr
+
 
 class SelectCommand(SqlCommand):
     def __init__(self, columns, table, where_statement=None):
@@ -28,12 +31,15 @@ class SelectCommand(SqlCommand):
                 print(entity)
             return formatted_result
         
+        # In what scenarios do we want to search on index?
+            # indexed column condition plus ANDs
+            # just indexed column
+        
         if self._is_search_condition_on_index():
             primary_key_condition = [c for c in self.where_statement if c[0] == self.primary_key_column][0]
             indexed_column = primary_key_condition[0]
-            search_value = primary_key_condition[1]
+            search_value = primary_key_condition[2]
             result = [self.table_storage.read_entity_from_index(self.table, indexed_column, search_value)]
-            # need to still perform pass search condition check
         else:
             result = self.table_storage.read_all(self.table)
             return_vals = []
@@ -61,7 +67,7 @@ class SelectCommand(SqlCommand):
     
     def _does_entity_pass_search_condition(self, entity):
         def evaluate_condition(condition):
-            search_col, search_value = condition
+            search_col, operation, search_value = condition
             try:
                 entity_val = entity[search_col]
             except Exception:
@@ -70,7 +76,20 @@ class SelectCommand(SqlCommand):
             entity_val_type = type(entity_val)
             cast_search_val = entity_val_type(search_value)
 
-            return entity[search_col] == cast_search_val
+            operations = {
+                '=': operator.eq,
+                '!=': operator.ne,
+                '>': operator.gt,
+                '>=': operator.ge,
+                '<': operator.lt,
+                '<=': operator.le,
+            }
+
+            entity_val = entity[search_col]
+            if operation in operations:
+                return operations[operation](entity_val, cast_search_val)
+            
+            raise ValueError(f'Unknown condition operator "{operator}"')
 
         result_tokens = []
         for token in self.where_statement:

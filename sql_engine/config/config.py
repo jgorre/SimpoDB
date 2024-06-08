@@ -9,7 +9,7 @@ class Config:
             cls._instance.initialized = False
         return cls._instance
 
-    def initialize(self, config: dict):
+    def initialize_with(self, config: dict):
         if self.initialized:
             raise RuntimeError('Config is immutable and has already been initialized.')
         
