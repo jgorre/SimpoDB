@@ -1,5 +1,6 @@
 from sortedcontainers import SortedDict
 from pympler.asizeof import asizeof
+from pybloom_live import ScalableBloomFilter
 import time
 import json
 import yaml
@@ -32,18 +33,33 @@ class TableStorage:
         if not self.initialized:
             self.memtables = {}
             self.sparse_indexes = {}
+            self.bloom_filters = {}
             self.initialized = True
 
         self.path_manager = PathManager()
         self.schema_manager = SchemaManager()
+        self.tables = [f.name for f in self.path_manager.get_data_path().iterdir() if f.is_dir()]
 
     def do_startup_initialization(self):
+        self._initialize_bloom_filters()
         self._initialize_memtables()
         self._initialize_sparse_indexes()
 
+
+    def _initialize_bloom_filters(self):
+        for table in self.tables:
+            bloom_filter_path = self.path_manager.get_bloom_filter_path(table)
+
+            if not bloom_filter_path.exists():
+                self.bloom_filters[table] = self.create_bloom_filter(table)
+                continue
+
+            with open(bloom_filter_path, 'rb') as bloom_file:
+                self.bloom_filters[table] = ScalableBloomFilter().fromfile(bloom_file)
+
+
     def _initialize_memtables(self):
-        tables = [f.name for f in self.path_manager.get_data_path().iterdir() if f.is_dir()]
-        for table in tables:
+        for table in self.tables:
             write_ahead_log = self.path_manager.get_data_path() / table / 'writeahead.log'
             if not write_ahead_log.exists():
                 continue
@@ -58,8 +74,7 @@ class TableStorage:
 
 
     def _initialize_sparse_indexes(self):
-        tables = [f.name for f in self.path_manager.get_data_path().iterdir() if f.is_dir()]
-        for table in tables:
+        for table in self.tables:
             sstables_path = self.path_manager.get_sstables_path(table)
 
             if not sstables_path.exists():
@@ -73,6 +88,7 @@ class TableStorage:
                         self.sparse_indexes[table] = {}
 
                     self.sparse_indexes[table][sstable_name] = byte_offsets
+
 
     def _should_memtable_be_flushed(self, table: str):
         # return asizeof(memtable) > 5_000
@@ -101,10 +117,12 @@ class TableStorage:
             self._instantiate_memtable(table)
 
         memtable = self._get_memtable(table)
+        bloom_filter = self._get_bloom_filter(table)
 
         for row in data:
             key = row.data[row.primary_key_index]
             memtable[key] = { 'data': row.data, '__schema_version': row.schema_version }
+            bloom_filter.add(key)
 
         
     def _write_sstable(self, table: str):
@@ -146,6 +164,12 @@ class TableStorage:
         new_sstable_path.rename(sstables_path / nanotime_str)
         self.path_manager.get_write_ahead_log_path(table).unlink()
         self._reset_memtable(table)
+
+        bloom_path = self.path_manager.get_bloom_filter_path(table)
+        bloom_filter = self._get_bloom_filter(table)
+        
+        with open(bloom_path, 'wb') as bloom_file:
+            bloom_filter.tofile(bloom_file)
 
             
     def read_all(self, table: str):
@@ -190,6 +214,10 @@ class TableStorage:
     def read_entity_from_index(self, table: str, indexed_column: str, search_key_value):
         cast_search_key_value = self._convert_key_to_table_key_type(table, search_key_value)
 
+        is_val_in_bloom_filter = cast_search_key_value in self._get_bloom_filter(table)
+        if not is_val_in_bloom_filter:
+            return
+        
         result_from_memtable = self._get_entity_from_memtable_record(table, cast_search_key_value)
 
         if result_from_memtable is not None:
@@ -266,3 +294,13 @@ class TableStorage:
             return
 
         self.memtables[table] = SortedDict()
+
+    
+    def _get_bloom_filter(self, table: str) -> ScalableBloomFilter:
+        if table not in self.bloom_filters:
+            return None
+        
+        return self.bloom_filters[table]
+    
+    def create_bloom_filter(self, table: str):
+        self.bloom_filters[table] = ScalableBloomFilter(initial_capacity=1000, error_rate=0.005)

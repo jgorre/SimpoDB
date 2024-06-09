@@ -1,5 +1,6 @@
 from .sql_command import SqlCommand
 from ..data_serialization.schema import SchemaManager
+from ..storage.storage import TableStorage
 
 class CreateTableCommand(SqlCommand):
     def __init__(self, table_name, columns, primary_key):
@@ -9,10 +10,12 @@ class CreateTableCommand(SqlCommand):
         self.primary_key = primary_key
         
         self.schema_manager = SchemaManager()
+        self.table_storage = TableStorage()
 
 
     def execute(self):
         self.schema_manager.create_schema(self.table_name, self._schema())
+        self.table_storage.create_bloom_filter(self.table_name)
 
 
     def _schema(self):

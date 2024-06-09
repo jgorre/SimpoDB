@@ -14,4 +14,7 @@ class PathManager:
     
     def get_sstables_path(self, table: str) -> Path:
         return self.data_path / table / 'sstables'
+    
+    def get_bloom_filter_path(self, table: str) -> Path:
+        return self.data_path / table / 'bloomfilter'
         
