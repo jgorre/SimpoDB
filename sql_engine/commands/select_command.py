@@ -24,24 +24,17 @@ class SelectCommand(SqlCommand):
 
     def execute(self):
         result = []
-        if self.where_statement is None:
-            result = list(self.table_storage.read_all(self.table))
-            formatted_result = self._format_result(result)
-            for entity in formatted_result:
-                print(entity)
-            return formatted_result
         
-        # In what scenarios do we want to search on index?
-            # indexed column condition plus ANDs
-            # just indexed column
-        
-        if self._is_search_condition_on_index():
+        # Consider making this function return on a more generator-y basis
+        if self._should_use_index():
             primary_key_condition = [c for c in self.where_statement if c[0] == self.primary_key_column][0]
             indexed_column = primary_key_condition[0]
             search_value = primary_key_condition[2]
             result = [self.table_storage.read_entity_from_index(self.table, indexed_column, search_value)]
         else:
-            result = self.table_storage.read_all(self.table)
+            result = list(self.table_storage.read_all(self.table))
+        
+        if self.where_statement is not None:
             return_vals = []
             for entity in result:
                 if self._does_entity_pass_search_condition(entity):
@@ -58,13 +51,17 @@ class SelectCommand(SqlCommand):
 
         # Bloom filter later
 
-    def _is_search_condition_on_index(self):
-        for condition in self.conditions:
-            if condition[0] == self.primary_key_column:
-                return True
-            
-        return False
-    
+    def _should_use_index(self):
+        if self.where_statement is None:
+            return False
+
+        index_conditions = [c for c in self.conditions if c[0] == self.primary_key_column and c[1] == '=']
+        is_single_index_condition = len(index_conditions) == 1
+        or_and_operators = [op.upper() for op in self.where_statement if not isinstance(op, tuple) and op.upper() in ['OR', 'AND']]
+        is_only_and_operators = len(or_and_operators) == 0 or all(op == 'AND' for op in or_and_operators)
+
+        return is_single_index_condition and is_only_and_operators
+
     def _does_entity_pass_search_condition(self, entity):
         def evaluate_condition(condition):
             search_col, operation, search_value = condition

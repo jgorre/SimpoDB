@@ -132,7 +132,7 @@ def test_read_all_contains_only_latest_writes_per_key(database_engine):
         database_engine.process_command(statement)
 
     query = "select * from pplz"
-    result = database_engine.process_command(query)
+    result = list(database_engine.process_command(query))
 
     assert len(result) == len(names)
 
@@ -192,3 +192,7 @@ def test_where_condition_operators(database_engine):
 
     bad_vals = [p for p in res if p['age'] < 20 or p['age'] >= 30 or p['age'] == 27]
     assert len(bad_vals) == 0
+
+    query = "select * from persons where name = 'Zoey' or (age >= 20 and age < 30 and age != 27)"
+    res = database_engine.process_command(query)
+    assert len(res) == 46
