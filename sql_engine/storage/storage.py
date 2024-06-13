@@ -13,12 +13,7 @@ from ..data_serialization import writer
 from ..data_serialization import reader
 from ..data_serialization import schema
 
-# Consider making global schemas object which caches up to x number of schemas
-# What happens when schema is updated though? Should update through the object
-# which handles schemas/caching, so that it can easily make the update.
-
-# Does it cache whole schema files or just individual objects? Probably the whole file?
-
+SSTABLE_SIZE = 28
 
 class TableStorage:
     _instance = None
@@ -70,7 +65,19 @@ class TableStorage:
                     self._write_to_memtable(table, [data])
 
             if self._should_memtable_be_flushed(table):
-                self._write_sstable(table)
+                self._flush_memtable(table)
+
+
+
+    
+    def get_encoded_memtable_values(self, table: str):
+        memtable = self._get_memtable(table)
+
+        return [
+            (
+                key, 
+                writer.encode(value['data'], value['__schema_version'])
+            ) for key, value in memtable.items()]
 
 
     def _initialize_sparse_indexes(self):
@@ -93,7 +100,7 @@ class TableStorage:
     def _should_memtable_be_flushed(self, table: str):
         # return asizeof(memtable) > 5_000
         # return len(self._get_memtable(table)) > 5
-        return len(self._get_memtable(table)) > 28
+        return len(self._get_memtable(table)) >= SSTABLE_SIZE
 
 
     def write_data_to_table(self, table: str, data: list[DataForInsert]):
@@ -101,7 +108,16 @@ class TableStorage:
         self._write_to_memtable(table, data)
 
         if self._should_memtable_be_flushed(table):
-            self._write_sstable(table)
+            self._flush_memtable(table)
+
+    
+    def _flush_memtable(self, table):
+        encoded_values = self.get_encoded_memtable_values(table)
+        self._write_uncommitted_sstable(table, encoded_values)
+        self._commit_sstables(table)
+        self._write_bloom_filter(table)
+        self._remove_write_ahead_log(table)
+        self._reset_memtable(table)
 
 
     def _write_to_log(self, table: str, data: list[DataForInsert]):
@@ -125,25 +141,42 @@ class TableStorage:
             bloom_filter.add(key)
 
         
-    def _write_sstable(self, table: str):
-        memtable = self._get_memtable(table)
-
-        encoded_values = [
-            (
-                key, 
-                writer.encode(value['data'], value['__schema_version'])
-            ) for key, value in memtable.items()]
-
-        nanotime_str = str(time.time_ns())
+    def _write_uncommitted_sstable(self, table: str, encoded_values):
         sstables_path = self.path_manager.get_sstables_path(table)
         sstables_path.mkdir(parents=False, exist_ok=True)
 
-        new_sstable_name = nanotime_str + '__uncommitted'
-        new_sstable_path = sstables_path / new_sstable_name
-        new_sstable_data_path = new_sstable_path / 'data'
-        new_sstable_offsets_path = new_sstable_path / 'offsets'
+        sstable_name = str(time.time_ns())
+        uncommitted_sstable_name = sstable_name + '__uncommitted'
+        uncommitted_sstable_path = sstables_path / uncommitted_sstable_name
 
-        new_sstable_path.mkdir(parents=False, exist_ok=True)
+        uncommitted_sstable_path.mkdir(parents=False, exist_ok=True)
+
+        self.___write_sstable(table, uncommitted_sstable_path, sstable_name, encoded_values)
+
+    
+    def _commit_sstables(self, table):
+        sstable_path = self.path_manager.get_sstables_path(table)
+        uncommitted_tables = [p for p in sstable_path.rglob('*__uncommitted') if p.is_dir()]
+
+        for table in uncommitted_tables:
+            committed_table_name = table.stem.replace("__uncommitted", '')
+            table.rename(sstable_path / committed_table_name)
+
+    def _remove_write_ahead_log(self, table):
+        self.path_manager.get_write_ahead_log_path(table).unlink()
+
+    
+    def _write_bloom_filter(self, table):
+        bloom_path = self.path_manager.get_bloom_filter_path(table)
+        bloom_filter = self._get_bloom_filter(table)
+        
+        with open(bloom_path, 'wb') as bloom_file:
+            bloom_filter.tofile(bloom_file)
+
+
+    def ___write_sstable(self, table, uncommitted_sstable_path, sstable_name, encoded_values):
+        new_sstable_data_path = uncommitted_sstable_path / 'data'
+        new_sstable_offsets_path = uncommitted_sstable_path / 'offsets'
 
         byte_offsets = {}
 
@@ -159,27 +192,31 @@ class TableStorage:
             if table not in self.sparse_indexes:
                 self.sparse_indexes[table] = {}
 
-            self.sparse_indexes[table][nanotime_str] = byte_offsets
+            self.sparse_indexes[table][sstable_name] = byte_offsets
 
-        new_sstable_path.rename(sstables_path / nanotime_str)
-        self.path_manager.get_write_ahead_log_path(table).unlink()
-        self._reset_memtable(table)
 
-        bloom_path = self.path_manager.get_bloom_filter_path(table)
-        bloom_filter = self._get_bloom_filter(table)
-        
-        with open(bloom_path, 'wb') as bloom_file:
-            bloom_filter.tofile(bloom_file)
+    def perform_compaction(self, table: str):
+        vals = self.read_all_sstable_data(table)
+        sstables_path = self.path_manager.get_sstables_path(table)
+
+        # We want to write uncommitted files until we have gone through all the vals
+        # Then we want to remove all the committed files, and change the name of
+        # the uncommitted files.
+
+        nanotime_str = str(time.time_ns())
+        sstables_path.mkdir(parents=False, exist_ok=True)
+
+        new_sstable_name = nanotime_str + '__compaction_uncommitted'
+        new_sstable_path = sstables_path / new_sstable_name
+        new_sstable_data_path = new_sstable_path / 'data'
+        new_sstable_offsets_path = new_sstable_path / 'offsets'
+
+        new_sstable_path.mkdir(parents=False, exist_ok=True)
+
+        self.___write_sstable(table, nanotime_str, new_sstable_data_path, new_sstable_offsets_path, encoded_values)
 
             
     def read_all(self, table: str):
-        sstable_path = self.path_manager.get_sstables_path(table)
-        
-        def get_file_iterator(file_path):
-            yield from reader.decode(table, file_path)
-
-        sstable_iterators = [get_file_iterator(path / 'data') for path in sorted(list(sstable_path.iterdir()), reverse=True)]
-
         keys = set()
 
         memtable = self._get_memtable(table)
@@ -188,9 +225,19 @@ class TableStorage:
             keys.add(key)
             yield self._get_entity_from_memtable_record(table, key)
         
+        yield from self.read_all_sstable_data(table, keys)
+
+    def read_all_sstable_data(self, table: str, keys: set[str]):
         primary_key_column = self.schema_manager.get_primary_key_column_for_table(table)
 
         heap = []
+
+        sstable_path = self.path_manager.get_sstables_path(table)
+        
+        def get_file_iterator(file_path):
+            yield from reader.decode(table, file_path)
+
+        sstable_iterators = [get_file_iterator(path / 'data') for path in sorted(list(sstable_path.iterdir()), reverse=True)]
 
         for iter_index, iterator in enumerate(sstable_iterators):
             value = next(iterator)
