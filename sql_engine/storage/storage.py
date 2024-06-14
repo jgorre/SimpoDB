@@ -214,6 +214,10 @@ class TableStorage:
                 self._write_uncommitted_sstable(table, chunk)
                 chunk = []
 
+        if len(chunk) > 0:
+            self._write_uncommitted_sstable(table, chunk)
+            chunk = []
+
         # remove old tables
         for item in sstables_path.iterdir():
             if item.is_dir() and not item.name.endswith('__uncommitted'):

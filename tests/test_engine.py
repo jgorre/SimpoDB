@@ -201,12 +201,12 @@ def test_where_condition_operators(database_engine):
     assert len(res) == 46
 
 
-def test_read_all_contains_only_latest_writes_per_key(database_engine):
-    create_table_statement = 'create table pplz (name string primary key, recency string)'
+def test_compaction(database_engine):
+    create_table_statement = 'create table pplzz (name string primary key, recency string)'
     database_engine.process_command(create_table_statement)
 
     def insert_p(name, recency):
-        return f"insert into pplz (name, recency) values ('{name}', '{recency}')"
+        return f"insert into pplzz (name, recency) values ('{name}', '{recency}')"
     
     names = ["Alice", "Bob", "Charlie", "David", "Eve", "Frank", "Grace", "Hannah", "Ivy", "Jack", "Kathy", "Liam", "Mia", "Noah", "Olivia", "Paul", "Quinn", "Rachel", "Sam", "Tina", "Uma", "Vince", "Wendy", "Xander", "Yara", "Zack", "Ava", "Ben", "Clara", "Daniel", "Ella", "Felix", "Georgia", "Henry", "Isla", "Jacob", "Karen", "Leo", "Megan", "Nina", "Oscar", "Penny", "Quincy", "Rita", "Sean", "Tara", "Uri", "Victor", "Willow", "Xena", "Yvonne", "Zane", "Amy", "Brian", "Cindy", "Dylan", "Emily", "Finn", "Gina", "Harry", "Iris", "James", "Kelly", "Lucas", "Molly", "Nick", "Opal", "Peter", "Quentin", "Ruby", "Scott", "Tiffany", "Ulysses", "Violet", "Wesley", "Xiomara", "Yasmin", "Zoe", "Abby", "Blake", "Chris", "Dana", "Eli", "Faith", "Gabe", "Holly", "Ian", "Jess", "Kyle", "Lily", "Miles", "Nate", "Owen"]
 
@@ -222,12 +222,22 @@ def test_read_all_contains_only_latest_writes_per_key(database_engine):
         statement = insert_p(name, 'latest')
         database_engine.process_command(statement)
 
-    pplzdir = pathlib.Path(TEST_DATA_PATH) / "pplz" / "sstables"
-    print("\nBefore:")
-    [print(f) for f in pplzdir.glob("*")]
+    pplzdir = pathlib.Path(TEST_DATA_PATH) / "pplzz" / "sstables"
+    files_before_compaction = [f for f in pplzdir.glob("*")]
+    assert len(files_before_compaction) == 9
 
-    command = "compact pplz"
+    command = "compact pplzz"
     database_engine.process_command(command)
 
-    print("\nAfter:")
-    [print(f) for f in pplzdir.glob("*")]
+    files_after_compaction = [f for f in pplzdir.glob("*")]
+    assert len(files_after_compaction) == 4
+
+    # Check that vals are proper vals.
+    query = "select * from pplzz"
+    result = list(database_engine.process_command(query))
+
+    assert len(result) == len(names)
+
+    bad_vals = [val for val in result if val['recency'] != 'latest']
+
+    assert len(bad_vals) == 0

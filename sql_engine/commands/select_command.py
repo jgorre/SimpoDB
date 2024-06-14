@@ -33,19 +33,20 @@ class SelectCommand(SqlCommand):
         else:
             result = list(self.table_storage.read_all(self.table))
         
+        result = [e.data for e in result]
+
         if self.where_statement is not None:
             return_vals = []
             for val in result:
-                entity = val.data
-                if self._does_entity_pass_search_condition(entity):
-                    return_vals.append(entity)
+                if self._does_entity_pass_search_condition(val):
+                    return_vals.append(val)
 
             result = return_vals
 
         result = self._format_result(result)
 
-        for entity in result:
-            print(entity)
+        for val in result:
+            print(val)
 
         return result
 
