@@ -5,13 +5,14 @@ import time
 import json
 import yaml
 import heapq
+import shutil
 
 from .data_for_insert import DataForInsert
 from .path_manager import PathManager
 from ..data_serialization.schema import SchemaManager
 from ..data_serialization import writer
 from ..data_serialization import reader
-from ..data_serialization import schema
+from ..data_serialization.entity import Entity
 
 SSTABLE_SIZE = 28
 
@@ -196,26 +197,32 @@ class TableStorage:
 
 
     def perform_compaction(self, table: str):
-        vals = self.read_all_sstable_data(table)
         sstables_path = self.path_manager.get_sstables_path(table)
-
-        # We want to write uncommitted files until we have gone through all the vals
-        # Then we want to remove all the committed files, and change the name of
-        # the uncommitted files.
-
-        nanotime_str = str(time.time_ns())
         sstables_path.mkdir(parents=False, exist_ok=True)
 
-        new_sstable_name = nanotime_str + '__compaction_uncommitted'
-        new_sstable_path = sstables_path / new_sstable_name
-        new_sstable_data_path = new_sstable_path / 'data'
-        new_sstable_offsets_path = new_sstable_path / 'offsets'
+        vals = self.read_all_sstable_data(table)
 
-        new_sstable_path.mkdir(parents=False, exist_ok=True)
+        chunk = []
+        for val in vals:
+            chunk.append(
+                (
+                    val.get_key_value(),
+                    writer.encode(val.data.values(), val.schema_version)
+                )
+            )
+            if len(chunk) >= SSTABLE_SIZE:
+                self._write_uncommitted_sstable(table, chunk)
+                chunk = []
 
-        self.___write_sstable(table, nanotime_str, new_sstable_data_path, new_sstable_offsets_path, encoded_values)
+        # remove old tables
+        for item in sstables_path.iterdir():
+            if item.is_dir() and not item.name.endswith('__uncommitted'):
+                shutil.rmtree(item)
 
-            
+        # then commit new tables
+        self._commit_sstables(table)
+                
+
     def read_all(self, table: str):
         keys = set()
 
@@ -227,9 +234,7 @@ class TableStorage:
         
         yield from self.read_all_sstable_data(table, keys)
 
-    def read_all_sstable_data(self, table: str, keys: set[str]):
-        primary_key_column = self.schema_manager.get_primary_key_column_for_table(table)
-
+    def read_all_sstable_data(self, table: str, keys=set()):
         heap = []
 
         sstable_path = self.path_manager.get_sstables_path(table)
@@ -241,7 +246,7 @@ class TableStorage:
 
         for iter_index, iterator in enumerate(sstable_iterators):
             value = next(iterator)
-            key = value[primary_key_column]
+            key = value.get_key_value()
             heapq.heappush(heap, (key, iter_index, value))
 
         while heap:
@@ -254,11 +259,11 @@ class TableStorage:
             next_value = next(sstable_iterators[iter_index], None)
 
             if next_value is not None:
-                next_key = next_value[primary_key_column]
+                next_key = next_value.get_key_value()
                 heapq.heappush(heap, (next_key, iter_index, next_value))
             
 
-    def read_entity_from_index(self, table: str, indexed_column: str, search_key_value):
+    def read_entity_from_index(self, table: str, search_key_value):
         cast_search_key_value = self._convert_key_to_table_key_type(table, search_key_value)
 
         is_val_in_bloom_filter = cast_search_key_value in self._get_bloom_filter(table)
@@ -280,7 +285,7 @@ class TableStorage:
 
             # print(f'searching path {path} for value {cast_search_key_value} between bytes {from_byte} and {until_byte}')
             for entity in reader.decode(table, path / 'data', from_byte, until_byte):
-                if entity[indexed_column] == cast_search_key_value:
+                if entity.get_key_value() == cast_search_key_value:
                     return entity
 
 
@@ -300,12 +305,13 @@ class TableStorage:
             return None
         
         memtable_record = memtable[key]
-        record_schema = self.schema_manager.get_schema_with_version(table, memtable_record['__schema_version'])
-        entity = {}
+        schema_version = memtable_record['__schema_version']
+        record_schema = self.schema_manager.get_schema_with_version(table, schema_version)
+        data = {}
         for i, column in enumerate(record_schema['columns']):
-            entity[column['name']] = memtable_record['data'][i]
+            data[column['name']] = memtable_record['data'][i]
 
-        return entity
+        return Entity(schema_version, record_schema['primary_key'], data)
 
     def _get_byte_range(self, table, sstable_name, search_key_value):
         sparse_index = self.sparse_indexes[table][sstable_name]

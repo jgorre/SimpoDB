@@ -2,6 +2,7 @@ import io
 from pathlib import Path
 
 from .schema import SchemaManager
+from .entity import Entity
         
 
 class ByteStreamProccessor:
@@ -25,7 +26,7 @@ class ByteStreamProccessor:
             schema_version = self._decode_unsigned_int()
             schema = self.schemas[str(schema_version)]
 
-            entity = {}
+            data = {}
             for column in schema['columns']:
                 col_type = column['type']
                 value = None
@@ -33,8 +34,10 @@ class ByteStreamProccessor:
                     value = self._decode_string()
                 elif col_type == 'INT':
                     value = self._decode_signed_int()
-                entity[column['name']] = value
-            yield entity
+                data[column['name']] = value
+
+            primary_key = schema['primary_key']
+            yield Entity(schema_version, primary_key, data)
 
     def _decode_string(self):
         str_length = self._decode_unsigned_int()

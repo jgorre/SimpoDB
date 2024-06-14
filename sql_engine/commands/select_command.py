@@ -28,15 +28,15 @@ class SelectCommand(SqlCommand):
         # Consider making this function return on a more generator-y basis
         if self._should_use_index():
             primary_key_condition = [c for c in self.where_statement if c[0] == self.primary_key_column][0]
-            indexed_column = primary_key_condition[0]
             search_value = primary_key_condition[2]
-            result = [self.table_storage.read_entity_from_index(self.table, indexed_column, search_value)]
+            result = [self.table_storage.read_entity_from_index(self.table, search_value)]
         else:
             result = list(self.table_storage.read_all(self.table))
         
         if self.where_statement is not None:
             return_vals = []
-            for entity in result:
+            for val in result:
+                entity = val.data
                 if self._does_entity_pass_search_condition(entity):
                     return_vals.append(entity)
 
@@ -49,7 +49,6 @@ class SelectCommand(SqlCommand):
 
         return result
 
-        # Bloom filter later
 
     def _should_use_index(self):
         if self.where_statement is None:

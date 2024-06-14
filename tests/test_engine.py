@@ -1,11 +1,14 @@
 import pytest
 import shutil
 import random
+import pathlib
 
 from sql_engine.engine import DatabaseEngine
 
 from sql_engine.engine import DatabaseEngine
 from sql_engine.config.config import Config
+
+TEST_DATA_PATH = "./test/data"
 
 def reset_config():
     Config._instance = None
@@ -73,7 +76,7 @@ def database_engine():
     reset_config()
 
     configuration = {
-        "dataPath": "./test/data"
+        "dataPath": TEST_DATA_PATH
     }
 
     engine = DatabaseEngine(configuration)
@@ -196,3 +199,35 @@ def test_where_condition_operators(database_engine):
     query = "select * from persons where name = 'Zoey' or (age >= 20 and age < 30 and age != 27)"
     res = database_engine.process_command(query)
     assert len(res) == 46
+
+
+def test_read_all_contains_only_latest_writes_per_key(database_engine):
+    create_table_statement = 'create table pplz (name string primary key, recency string)'
+    database_engine.process_command(create_table_statement)
+
+    def insert_p(name, recency):
+        return f"insert into pplz (name, recency) values ('{name}', '{recency}')"
+    
+    names = ["Alice", "Bob", "Charlie", "David", "Eve", "Frank", "Grace", "Hannah", "Ivy", "Jack", "Kathy", "Liam", "Mia", "Noah", "Olivia", "Paul", "Quinn", "Rachel", "Sam", "Tina", "Uma", "Vince", "Wendy", "Xander", "Yara", "Zack", "Ava", "Ben", "Clara", "Daniel", "Ella", "Felix", "Georgia", "Henry", "Isla", "Jacob", "Karen", "Leo", "Megan", "Nina", "Oscar", "Penny", "Quincy", "Rita", "Sean", "Tara", "Uri", "Victor", "Willow", "Xena", "Yvonne", "Zane", "Amy", "Brian", "Cindy", "Dylan", "Emily", "Finn", "Gina", "Harry", "Iris", "James", "Kelly", "Lucas", "Molly", "Nick", "Opal", "Peter", "Quentin", "Ruby", "Scott", "Tiffany", "Ulysses", "Violet", "Wesley", "Xiomara", "Yasmin", "Zoe", "Abby", "Blake", "Chris", "Dana", "Eli", "Faith", "Gabe", "Holly", "Ian", "Jess", "Kyle", "Lily", "Miles", "Nate", "Owen"]
+
+    for name in names:
+        statement = insert_p(name, 'oldest')
+        database_engine.process_command(statement)
+
+    for name in names:
+        statement = insert_p(name, 'older')
+        database_engine.process_command(statement)
+
+    for name in names:
+        statement = insert_p(name, 'latest')
+        database_engine.process_command(statement)
+
+    pplzdir = pathlib.Path(TEST_DATA_PATH) / "pplz" / "sstables"
+    print("\nBefore:")
+    [print(f) for f in pplzdir.glob("*")]
+
+    command = "compact pplz"
+    database_engine.process_command(command)
+
+    print("\nAfter:")
+    [print(f) for f in pplzdir.glob("*")]

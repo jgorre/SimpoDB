@@ -32,5 +32,10 @@ class DatabaseEngine:
         TableStorage().do_startup_initialization()
 
     def process_command(self, command: str):
+        if command.startswith("compact"):
+            table_for_compaction = command.split(" ")[1]
+            TableStorage().perform_compaction(table_for_compaction)
+            return
+
         parsed_sql_command = parser.parse(command)
         return handle_sql_command(parsed_sql_command)
