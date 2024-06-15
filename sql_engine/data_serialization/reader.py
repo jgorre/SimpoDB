@@ -9,7 +9,7 @@ class ByteStreamProccessor:
     def __init__(self, table: str, binary_data_path: Path):
         self.table = table
         self.data_path = binary_data_path
-        self.schemas = SchemaManager().get_all_schemas(table) # temporary solution. Just pre-emptively load in all schemas.
+        self.schema_manager = SchemaManager()
 
     def process(self, from_byte=None, until_byte=None):
         with open(self.data_path, 'rb') as file:
@@ -24,7 +24,7 @@ class ByteStreamProccessor:
 
         while self.buffer.tell() < until_byte:
             schema_version = self._decode_unsigned_int()
-            schema = self.schemas[str(schema_version)]
+            schema = self.schema_manager.get_schema_with_version(self.table, schema_version)
 
             data = {}
             for column in schema['columns']:

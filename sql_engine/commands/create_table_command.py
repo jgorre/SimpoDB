@@ -20,7 +20,7 @@ class CreateTableCommand(SqlCommand):
 
     def _schema(self):
         return {
-            0: {
+            "0": {
                 "columns": [{
                     "name": column_name,
                     "type": column_type.upper(),

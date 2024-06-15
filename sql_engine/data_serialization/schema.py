@@ -4,43 +4,40 @@ from sql_engine.storage.path_manager import PathManager
 from ..sql_types.sql_type_mapping import sql_type_mapping
 
 class SchemaManager:
+    _instance = None
+
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super(SchemaManager, cls).__new__(cls)
+            cls._instance.initialized = False
+        return cls._instance
+
     def __init__(self) -> None:
-        # make cache for recently accessed stuff. 
-        # Or why not simply load all schemas into memory?
-        # How many schemas could there realistically be?
+        if self.initialized:
+            return
 
         self.path_manager = PathManager()
 
-    def get_schema_path(self, table_name: str):
-        schema_path = self.path_manager.get_data_path() / table_name / 'schema.json'
+        tables_path = self.path_manager.get_data_path()
 
-        if not schema_path.exists():
-            return None
+        self.schemas = {}
+        for table_path in tables_path.iterdir():
+            schema_path = table_path / "schema.json"
+            table_name = table_path.stem
+            with open(schema_path, 'r') as schema_file:
+                self.schemas[table_name] = json.load(schema_file)
         
-        return schema_path
+        self.initialized = True
 
     def get_all_schemas(self, table_name: str):
-        schema_path = self.get_schema_path(table_name)
-        with open(schema_path, 'r') as schemas:
-            return json.load(schemas)
+        return self.schemas[table_name]
 
     def get_latest_schema(self, table_name: str):
-        schema_path = self.get_schema_path(table_name)
-        with open(schema_path, 'r') as schema:
-            schemas = json.load(schema)
-            latest_version = max(schemas.keys(), key=int)
-            return latest_version, schemas[latest_version]
+        schema_version, schema = list(self.schemas[table_name].items())[-1]
+        return schema_version, schema
         
     def get_schema_with_version(self, table_name: str, version: int):
-        schema_path = self.get_schema_path(table_name)
-        with open(schema_path, 'r') as schema:
-            schemas = json.load(schema)
-
-            try:
-                return schemas[str(version)]
-            except:
-                print(f'Schema version {version} for table {table_name} does not exist.')
-                return None
+        return self.schemas[table_name][str(version)]
         
     def get_schema_columns(self, table_name: str):
         _, schema = self.get_latest_schema(table_name)
@@ -60,6 +57,8 @@ class SchemaManager:
 
         sstables_path = schema_path / 'sstables'
         sstables_path.mkdir(parents=True, exist_ok=False)
+
+        self.schemas[table_name] = schema
 
     def get_primary_key_column_for_table(self, table_name: str):
         _, schema = self.get_latest_schema(table_name)

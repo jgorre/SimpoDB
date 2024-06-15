@@ -107,7 +107,6 @@ class TableStorage:
         self._write_to_log(table, data)
         self._write_to_memtable(table, data)
 
-        print(len(self._get_memtable(table)))
         if self._should_memtable_be_flushed(table):
             self._flush_memtable(table)
 
