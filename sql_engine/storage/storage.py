@@ -1,5 +1,4 @@
 from sortedcontainers import SortedDict
-from pympler.asizeof import asizeof
 from pybloom_live import ScalableBloomFilter
 import time
 import json
@@ -13,6 +12,7 @@ from ..data_serialization.schema import SchemaManager
 from ..data_serialization import writer
 from ..data_serialization import reader
 from ..data_serialization.entity import Entity
+from ..config.config import Config
 
 SSTABLE_SIZE = 28
 
@@ -35,6 +35,9 @@ class TableStorage:
         self.path_manager = PathManager()
         self.schema_manager = SchemaManager()
         self.tables = [f.name for f in self.path_manager.get_data_path().iterdir() if f.is_dir()]
+        
+        self.db_config = Config()
+        self.sstable_size = self.db_config.sstable_size
 
     def do_startup_initialization(self):
         self._initialize_bloom_filters()
@@ -68,8 +71,6 @@ class TableStorage:
             if self._should_memtable_be_flushed(table):
                 self._flush_memtable(table)
 
-
-
     
     def get_encoded_memtable_values(self, table: str):
         memtable = self._get_memtable(table)
@@ -99,15 +100,14 @@ class TableStorage:
 
 
     def _should_memtable_be_flushed(self, table: str):
-        # return asizeof(memtable) > 5_000
-        # return len(self._get_memtable(table)) > 5
-        return len(self._get_memtable(table)) >= SSTABLE_SIZE
+        return len(self._get_memtable(table)) >= self.sstable_size
 
 
     def write_data_to_table(self, table: str, data: list[DataForInsert]):
         self._write_to_log(table, data)
         self._write_to_memtable(table, data)
 
+        print(len(self._get_memtable(table)))
         if self._should_memtable_be_flushed(table):
             self._flush_memtable(table)
 
@@ -181,9 +181,11 @@ class TableStorage:
 
         byte_offsets = {}
 
+        sparse_index_distance = self.sstable_size / 5
+
         with open(new_sstable_data_path, 'wb') as data_file:
             for index, (key, value) in enumerate(encoded_values):
-                if index % 5 == 0:
+                if index % sparse_index_distance == 0:
                     byte_offsets[key] = data_file.tell()
                 data_file.write(value)
 
@@ -210,7 +212,7 @@ class TableStorage:
                     writer.encode(val.data.values(), val.schema_version)
                 )
             )
-            if len(chunk) >= SSTABLE_SIZE:
+            if len(chunk) >= self.sstable_size:
                 self._write_uncommitted_sstable(table, chunk)
                 chunk = []
 
@@ -218,12 +220,10 @@ class TableStorage:
             self._write_uncommitted_sstable(table, chunk)
             chunk = []
 
-        # remove old tables
         for item in sstables_path.iterdir():
             if item.is_dir() and not item.name.endswith('__uncommitted'):
                 shutil.rmtree(item)
 
-        # then commit new tables
         self._commit_sstables(table)
                 
 
@@ -268,7 +268,8 @@ class TableStorage:
             
 
     def read_entity_from_index(self, table: str, search_key_value):
-        cast_search_key_value = self._convert_key_to_table_key_type(table, search_key_value)
+        primary_key_type = self.schema_manager.get_primary_key_type(table)
+        cast_search_key_value = primary_key_type(search_key_value)
 
         is_val_in_bloom_filter = cast_search_key_value in self._get_bloom_filter(table)
         if not is_val_in_bloom_filter:
@@ -292,12 +293,6 @@ class TableStorage:
                 if entity.get_key_value() == cast_search_key_value:
                     return entity
 
-
-    def _convert_key_to_table_key_type(self, table, key):
-        memtable = self._get_memtable(table)
-        key_type = type(memtable.keys()[0])
-        return key_type(key)
-        
 
     def _get_entity_from_memtable_record(self, table: str, key):
         memtable = self._get_memtable(table)

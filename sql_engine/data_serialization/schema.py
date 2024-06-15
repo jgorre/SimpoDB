@@ -1,9 +1,14 @@
 import json
 
 from sql_engine.storage.path_manager import PathManager
+from ..sql_types.sql_type_mapping import sql_type_mapping
 
 class SchemaManager:
     def __init__(self) -> None:
+        # make cache for recently accessed stuff. 
+        # Or why not simply load all schemas into memory?
+        # How many schemas could there realistically be?
+
         self.path_manager = PathManager()
 
     def get_schema_path(self, table_name: str):
@@ -59,3 +64,14 @@ class SchemaManager:
     def get_primary_key_column_for_table(self, table_name: str):
         _, schema = self.get_latest_schema(table_name)
         return schema['primary_key']
+    
+    def get_primary_key_type(self, table_name: str):
+        _, schema = self.get_latest_schema(table_name)
+        primary_key = schema['primary_key']
+        column_specs = [col_spec for col_spec in schema['columns'] if primary_key == col_spec['name']]
+
+        if len(column_specs) != 1:
+            raise ValueError(f"Table '{table_name}' has a corrupt schema. Expected to find one primary key column, got {len(column_specs)}")
+        
+        column_spec = column_specs[0]
+        return sql_type_mapping[column_spec['type']]

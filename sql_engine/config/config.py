@@ -13,6 +13,7 @@ class Config:
         if self.initialized:
             raise RuntimeError('Config is immutable and has already been initialized.')
         
-        self.data_path = Path(config['dataPath'])
+        self.data_path = Path(config['data']['path'])
+        self.sstable_size = config['data']['sstable_size']
         self.initialized = True
 

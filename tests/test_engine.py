@@ -76,7 +76,10 @@ def database_engine():
     reset_config()
 
     configuration = {
-        "dataPath": TEST_DATA_PATH
+        "data": {
+            "path": TEST_DATA_PATH,
+            "sstable_size": 50 # entries
+        }
     }
 
     engine = DatabaseEngine(configuration)
@@ -224,13 +227,13 @@ def test_compaction(database_engine):
 
     pplzdir = pathlib.Path(TEST_DATA_PATH) / "pplzz" / "sstables"
     files_before_compaction = [f for f in pplzdir.glob("*")]
-    assert len(files_before_compaction) == 9
+    assert len(files_before_compaction) == 5
 
     command = "compact pplzz"
     database_engine.process_command(command)
 
     files_after_compaction = [f for f in pplzdir.glob("*")]
-    assert len(files_after_compaction) == 4
+    assert len(files_after_compaction) == 2
 
     # Check that vals are proper vals.
     query = "select * from pplzz"

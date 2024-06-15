@@ -1,1 +1,3 @@
-dataPath: ./data
+data:
+  path: ./data
+  sstable_size: 28
